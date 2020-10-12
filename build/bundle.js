@@ -12073,7 +12073,12 @@ var Displacement = /*#__PURE__*/function (_Stream) {
 
       this.firstTexture.loadContentsOf(frame1.element);
       this.secondTexture.loadContentsOf(frame2.element);
-      this.displacementTexture.loadContentsOf(this.displacementImg);
+
+      if (this._displacementSrc !== this.displacementImg.src) {
+        this.displacementTexture.loadContentsOf(this.displacementImg);
+        this._displacementSrc = this.displacementImg.src;
+      }
+
       this.shader.run(this.options);
     }
   }, {
