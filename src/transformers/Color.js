@@ -33,8 +33,9 @@ export default class Color extends Stream {
     if (!source) return;
     /** @type {Frame} */
     const frame = source.frame;
-    frame.setDimensions(this.webgl);
-    this.shader.resize();
+    if (frame.setDimensions(this.webgl)) {
+      this.shader.resize();
+    }
     this.texture.loadContentsOf(frame.element);
     this.shader.run(this.options);
   }

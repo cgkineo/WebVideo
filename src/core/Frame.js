@@ -58,10 +58,14 @@ export default class Frame {
     }
     const width = this.width;
     const height = this.height;
+    let isChanged = false;
     setOns.forEach(function(setOn) {
+      if (setOn.width === width && setOn.height === height) return;
+      isChanged = true;
       setOn.width = width;
       setOn.height = height;
     }.bind(this));
+    return isChanged;
   }
 
 }

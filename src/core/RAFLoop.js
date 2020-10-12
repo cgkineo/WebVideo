@@ -2,7 +2,6 @@
 export class RAFLoop {
 
   constructor({ fps = 60 } = {}) {
-    this.isStopped = false;
     this.callbacks = [];
     this.lastTick = -1;
     this.tick = this.tick.bind(this);
@@ -25,22 +24,12 @@ export class RAFLoop {
   add(callback) {
     if (this.callbacks.find(cb => cb === callback)) return;
     this.callbacks.push(callback);
-    if (this.isStopped || this.isTicking) return;
-    this.kick();
-  }
-
-  remove(callback) {
-    this.callbacks = this.callbacks.filter(cb => cb !== callback);
-  }
-
-  start() {
-    this.isStopped = false;
     if (this.isTicking) return;
     this.kick();
   }
 
   kick() {
-    if (this.isStopped || !this.callbacks.length) {
+    if (!this.callbacks.length) {
       this.isTicking = false;
       return;
     }
@@ -72,10 +61,6 @@ export class RAFLoop {
     }
     this.lastTick = now;
     setTimeout(this.kick, this._interval - this._rafOffset);
-  }
-
-  stop() {
-    this.isStopped = true;
   }
 
 }

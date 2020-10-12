@@ -10597,10 +10597,14 @@ var Frame = /*#__PURE__*/function () {
 
       var width = this.width;
       var height = this.height;
+      var isChanged = false;
       setOns.forEach(function (setOn) {
+        if (setOn.width === width && setOn.height === height) return;
+        isChanged = true;
         setOn.width = width;
         setOn.height = height;
       }.bind(this));
+      return isChanged;
     }
   }, {
     key: "height",
@@ -10675,7 +10679,6 @@ var RAFLoop = /*#__PURE__*/function () {
 
     _classCallCheck(this, RAFLoop);
 
-    this.isStopped = false;
     this.callbacks = [];
     this.lastTick = -1;
     this.tick = this.tick.bind(this);
@@ -10691,27 +10694,13 @@ var RAFLoop = /*#__PURE__*/function () {
         return cb === callback;
       })) return;
       this.callbacks.push(callback);
-      if (this.isStopped || this.isTicking) return;
-      this.kick();
-    }
-  }, {
-    key: "remove",
-    value: function remove(callback) {
-      this.callbacks = this.callbacks.filter(function (cb) {
-        return cb !== callback;
-      });
-    }
-  }, {
-    key: "start",
-    value: function start() {
-      this.isStopped = false;
       if (this.isTicking) return;
       this.kick();
     }
   }, {
     key: "kick",
     value: function kick() {
-      if (this.isStopped || !this.callbacks.length) {
+      if (!this.callbacks.length) {
         this.isTicking = false;
         return;
       }
@@ -10750,11 +10739,6 @@ var RAFLoop = /*#__PURE__*/function () {
 
       this.lastTick = now;
       setTimeout(this.kick, this._interval - this._rafOffset);
-    }
-  }, {
-    key: "stop",
-    value: function stop() {
-      this.isStopped = true;
     }
   }, {
     key: "fps",
@@ -11603,13 +11587,13 @@ var Input = /*#__PURE__*/function (_Stream) {
 
     return _this;
   }
+  /**
+   * Trigger onRedraw, throttled to the framerate and inside an animation frame
+   */
+
 
   _createClass(Input, [{
     key: "redraw",
-
-    /**
-     * Trigger onRedraw, throttled to the framerate and inside an animation frame
-     */
     value: function redraw() {
       _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.onRedraw);
     }
@@ -11619,11 +11603,6 @@ var Input = /*#__PURE__*/function (_Stream) {
       this.changed();
       if (!this.isVideo || this.element.paused) return;
       _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.redraw);
-    }
-  }, {
-    key: "lastRedraw",
-    get: function get() {
-      return this._lastRedraw;
     }
   }]);
 
@@ -11864,8 +11843,11 @@ var Color = /*#__PURE__*/function (_Stream) {
       /** @type {Frame} */
 
       var frame = source.frame;
-      frame.setDimensions(this.webgl);
-      this.shader.resize();
+
+      if (frame.setDimensions(this.webgl)) {
+        this.shader.resize();
+      }
+
       this.texture.loadContentsOf(frame.element);
       this.shader.run(this.options);
     }
@@ -12084,8 +12066,11 @@ var Displacement = /*#__PURE__*/function (_Stream) {
       if (!source1 || !source2) return;
       var frame1 = source1.frame;
       var frame2 = source2.frame;
-      frame1.setDimensions(this.webgl);
-      this.shader.resize();
+
+      if (frame1.setDimensions(this.webgl)) {
+        this.shader.resize();
+      }
+
       this.firstTexture.loadContentsOf(frame1.element);
       this.secondTexture.loadContentsOf(frame2.element);
       this.displacementTexture.loadContentsOf(this.displacementImg);
@@ -12192,8 +12177,11 @@ var Color = /*#__PURE__*/function (_Stream) {
       if (!source1 || !source2) return;
       var frame1 = source1.frame;
       var frame2 = source2.frame;
-      frame1.setDimensions(this.webgl);
-      this.shader.resize();
+
+      if (frame1.setDimensions(this.webgl)) {
+        this.shader.resize();
+      }
+
       this.firstTexture.loadContentsOf(frame1.element);
       this.secondTexture.loadContentsOf(frame2.element);
       this.shader.run(this.options);
@@ -12299,8 +12287,11 @@ var Sepia = /*#__PURE__*/function (_Stream) {
       /** @type {Frame} */
 
       var frame = source.frame;
-      frame.setDimensions(this.webgl);
-      this.shader.resize();
+
+      if (frame.setDimensions(this.webgl)) {
+        this.shader.resize();
+      }
+
       this.texture.loadContentsOf(frame.element);
       this.shader.run(this.options);
     }

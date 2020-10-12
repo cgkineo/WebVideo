@@ -37,8 +37,9 @@ export default class Displacement extends Stream {
     if (!source1 || !source2) return;
     const frame1 = source1.frame;
     const frame2 = source2.frame;
-    frame1.setDimensions(this.webgl);
-    this.shader.resize();
+    if (frame1.setDimensions(this.webgl)) {
+      this.shader.resize();
+    }
     this.firstTexture.loadContentsOf(frame1.element);
     this.secondTexture.loadContentsOf(frame2.element);
     this.displacementTexture.loadContentsOf(this.displacementImg);

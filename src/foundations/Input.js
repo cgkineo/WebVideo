@@ -18,10 +18,6 @@ export default class Input extends Stream {
     }
   }
 
-  get lastRedraw() {
-    return this._lastRedraw;
-  }
-
   /**
    * Trigger onRedraw, throttled to the framerate and inside an animation frame
    */
