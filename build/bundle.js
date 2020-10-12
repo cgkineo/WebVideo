@@ -10673,18 +10673,13 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var RAFLoop = /*#__PURE__*/function () {
   function RAFLoop() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$fps = _ref.fps,
-        fps = _ref$fps === void 0 ? 60 : _ref$fps;
-
     _classCallCheck(this, RAFLoop);
 
     this.callbacks = [];
     this.lastTick = -1;
     this.tick = this.tick.bind(this);
     this.kick = this.kick.bind(this);
-    this.isWaitingTick = false;
-    this.fps = fps;
+    this.isTicking = false;
   }
 
   _createClass(RAFLoop, [{
@@ -10705,24 +10700,12 @@ var RAFLoop = /*#__PURE__*/function () {
         return;
       }
 
-      this._lastTry = Date.now();
       requestAnimationFrame(this.tick);
     }
   }, {
     key: "tick",
     value: function tick() {
-      this.isTicking = true;
-      var now = Date.now();
-      this._rafOffset = now - this._lastTry;
-      if (this._rafOffset < 10) this._rafOffset = 10;
-      var timePassed = now - this.lastTick;
-      var timeLeft = this._interval - timePassed;
-
-      if (timeLeft >= 20) {
-        // Too soon, able to schedule
-        return setTimeout(this.kick, timeLeft - this._rafOffset);
-      } // Take a copy to prevent circular processing
-
+      this.isTicking = true; // Take a copy to prevent circular processing
 
       var callbacks = this.callbacks.slice(0);
       this.callbacks.length = 0;
@@ -10737,18 +10720,7 @@ var RAFLoop = /*#__PURE__*/function () {
         }
       }
 
-      this.lastTick = now;
-      setTimeout(this.kick, this._interval - this._rafOffset);
-    }
-  }, {
-    key: "fps",
-    set: function set(value) {
-      if (value > 60) value = 60;else if (value < 25) value = 25;
-      this._fps = value;
-      this._interval = 1000 / value;
-    },
-    get: function get() {
-      return this._fps;
+      this.kick();
     }
   }]);
 

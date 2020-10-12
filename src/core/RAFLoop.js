@@ -1,24 +1,12 @@
 
 export class RAFLoop {
 
-  constructor({ fps = 60 } = {}) {
+  constructor() {
     this.callbacks = [];
     this.lastTick = -1;
     this.tick = this.tick.bind(this);
     this.kick = this.kick.bind(this);
-    this.isWaitingTick = false;
-    this.fps = fps;
-  }
-
-  set fps(value) {
-    if (value > 60) value = 60;
-    else if (value < 25) value = 25;
-    this._fps = value;
-    this._interval = 1000 / value;
-  }
-
-  get fps() {
-    return this._fps;
+    this.isTicking = false;
   }
 
   add(callback) {
@@ -33,21 +21,11 @@ export class RAFLoop {
       this.isTicking = false;
       return;
     }
-    this._lastTry = Date.now();
     requestAnimationFrame(this.tick);
   }
 
   tick() {
     this.isTicking = true;
-    const now = Date.now();
-    this._rafOffset = now - this._lastTry;
-    if (this._rafOffset < 10) this._rafOffset = 10;
-    const timePassed = (now - this.lastTick);
-    const timeLeft = this._interval - timePassed;
-    if (timeLeft >= 20) {
-      // Too soon, able to schedule
-      return setTimeout(this.kick, timeLeft - this._rafOffset);
-    }
     // Take a copy to prevent circular processing
     const callbacks = this.callbacks.slice(0);
     this.callbacks.length = 0;
@@ -59,8 +37,7 @@ export class RAFLoop {
         console.warn(err);
       }
     }
-    this.lastTick = now;
-    setTimeout(this.kick, this._interval - this._rafOffset);
+    this.kick();
   }
 
 }
