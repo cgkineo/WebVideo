@@ -10776,10 +10776,10 @@ var Stream = /*#__PURE__*/function (_Events) {
 
   _createClass(Stream, null, [{
     key: "getNextId",
-    value: function getNextId(name) {
+    value: function getNextId() {
       if (Stream._uid >= Number.MAX_SAFE_INTEGER) Stream._uid = 0;
       Stream._uid = Stream._uid || 0;
-      return (name || "") + Stream._uid++;
+      return Stream._uid++;
     }
   }]);
 
@@ -10789,7 +10789,7 @@ var Stream = /*#__PURE__*/function (_Events) {
     _classCallCheck(this, Stream);
 
     _this = _super.call(this);
-    _this.uid = Stream.getNextId(options && options.name), _this.options = options;
+    _this.uid = Stream.getNextId(), _this.options = options;
     /** @type {[Stream]} */
 
     _this.destinations = [];
@@ -10804,7 +10804,7 @@ var Stream = /*#__PURE__*/function (_Events) {
     _this._frame = null;
     /** @type {HTMLVideoElement} */
 
-    _this.element = options.element;
+    _this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
 
     _this.on({
       "pipe": _this.addDestination,
@@ -11536,15 +11536,12 @@ var Input = /*#__PURE__*/function (_Stream) {
 
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         _ref$element = _ref.element,
-        element = _ref$element === void 0 ? null : _ref$element,
-        _ref$name = _ref.name,
-        name = _ref$name === void 0 ? '' : _ref$name;
+        element = _ref$element === void 0 ? null : _ref$element;
 
     _classCallCheck(this, Input);
 
     _this = _super.call(this, {
-      element: element,
-      name: name
+      element: element
     });
     _this.redraw = _this.redraw.bind(_assertThisInitialized(_this));
     _this.onRedraw = _this.onRedraw.bind(_assertThisInitialized(_this));
@@ -11630,15 +11627,12 @@ var Output = /*#__PURE__*/function (_Input) {
   function Output() {
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         _ref$element = _ref.element,
-        element = _ref$element === void 0 ? null : _ref$element,
-        _ref$name = _ref.name,
-        name = _ref$name === void 0 ? '' : _ref$name;
+        element = _ref$element === void 0 ? null : _ref$element;
 
     _classCallCheck(this, Output);
 
     return _super.call(this, {
-      element: element,
-      name: name
+      element: element
     });
   }
 
@@ -11784,7 +11778,6 @@ var Color = /*#__PURE__*/function (_Stream) {
    * @param {number} options.contrast
    * @param {number} options.hue
    * @param {number} options.saturation
-   * @param {string} options.name
    */
   function Color() {
     var _this;
@@ -11795,8 +11788,7 @@ var Color = /*#__PURE__*/function (_Stream) {
 
     var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_2__["default"]();
     _this = _super.call(this, {
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     _this.options = options;
     _this.webgl = webgl;
@@ -11917,15 +11909,10 @@ var Copy = /*#__PURE__*/function (_Stream) {
   function Copy() {
     var _this;
 
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$name = _ref.name,
-        name = _ref$name === void 0 ? '' : _ref$name;
-
     _classCallCheck(this, Copy);
 
     _this = _super.call(this, {
-      element: document.createElement('canvas'),
-      name: name
+      element: document.createElement('canvas')
     });
     _this.context = _this.element.getContext('2d');
     return _this;
@@ -12001,7 +11988,6 @@ var Displacement = /*#__PURE__*/function (_Stream) {
    * @param {Object} options
    * @param {number} options.amount
    * @param {number} options.displacement
-   * @param {string} options.name
    */
   function Displacement() {
     var _this;
@@ -12012,8 +11998,7 @@ var Displacement = /*#__PURE__*/function (_Stream) {
 
     var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
     _this = _super.call(this, {
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     _this.options = options;
     _this.webgl = webgl;
@@ -12121,7 +12106,6 @@ var Color = /*#__PURE__*/function (_Stream) {
   /**
    * @param {Object} options
    * @param {number} options.amount
-   * @param {string} options.name
    */
   function Color() {
     var _this;
@@ -12132,8 +12116,7 @@ var Color = /*#__PURE__*/function (_Stream) {
 
     var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
     _this = _super.call(this, {
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     _this.options = options;
     _this.webgl = webgl;
@@ -12233,7 +12216,6 @@ var Sepia = /*#__PURE__*/function (_Stream) {
   /**
    * @param {Object} options
    * @param {number} options.amount
-   * @param {string} options.name
    */
   function Sepia() {
     var _this;
@@ -12244,8 +12226,7 @@ var Sepia = /*#__PURE__*/function (_Stream) {
 
     var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_2__["default"]();
     _this = _super.call(this, {
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     _this.options = options;
     _this.webgl = webgl;

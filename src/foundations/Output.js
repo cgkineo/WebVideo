@@ -4,10 +4,9 @@ import Frame from '../core/Frame';
 export default class Output extends Input {
 
   constructor({
-    element = null,
-    name = ''
+    element = null
   } = {}) {
-    super({ element, name });
+    super({ element });
   }
 
   set element(value) {

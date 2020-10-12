@@ -9,13 +9,11 @@ export default class Displacement extends Stream {
    * @param {Object} options
    * @param {number} options.amount
    * @param {number} options.displacement
-   * @param {string} options.name
    */
   constructor(options = {}) {
     const webgl = new WebGL();
     super({
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     this.options = options;
     this.webgl = webgl;

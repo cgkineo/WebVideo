@@ -3,12 +3,9 @@ import Frame from '../core/Frame';
 
 export default class Copy extends Stream {
 
-  constructor({
-    name = ''
-  } = {}) {
+  constructor() {
     super({
-      element: document.createElement('canvas'),
-      name
+      element: document.createElement('canvas')
     });
     this.context = this.element.getContext('2d');
   }

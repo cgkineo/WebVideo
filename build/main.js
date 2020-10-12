@@ -1,13 +1,11 @@
 // # Setup stream parts
 
   const video1 = new Stream.Input({
-    element: document.querySelector("#video1"),
-    name: "video1"
+    element: '#video1'
   });
 
   const video2 = new Stream.Input({
-    element: document.querySelector("#video2"),
-    name: "video2"
+    element: '#video2'
   });
 
   const sepia1 = new Stream.Sepia({
@@ -34,8 +32,7 @@
   });
 
   const canvas1 = new Stream.Output({
-    element: document.querySelector("canvas"),
-    name:"canvas"
+    element: 'canvas'
   });
 
 

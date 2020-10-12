@@ -12,13 +12,11 @@ export default class Color extends Stream {
    * @param {number} options.contrast
    * @param {number} options.hue
    * @param {number} options.saturation
-   * @param {string} options.name
    */
   constructor(options = {}) {
     const webgl = new WebGL();
     super({
-      element: webgl.canvas,
-      name: options.name
+      element: webgl.canvas
     });
     this.options = options;
     this.webgl = webgl;

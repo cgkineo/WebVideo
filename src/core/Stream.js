@@ -4,15 +4,15 @@ import Frame from './Frame';
 
 export default class Stream extends Events {
 
-  static getNextId(name) {
+  static getNextId() {
     if (Stream._uid >= Number.MAX_SAFE_INTEGER) Stream._uid = 0;
     Stream._uid = Stream._uid || 0;
-    return (name||"")+(Stream._uid++);
+    return Stream._uid++;
   }
 
   constructor(options) {
     super();
-    this.uid = Stream.getNextId(options && options.name),
+    this.uid = Stream.getNextId(),
     this.options = options;
     /** @type {[Stream]} */
     this.destinations = [];
@@ -23,7 +23,7 @@ export default class Stream extends Events {
     /** @type {Frame} */
     this._frame = null;
     /** @type {HTMLVideoElement} */
-    this.element = options.element;
+    this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
     this.on({
       "pipe": this.addDestination,
       "unpipe": this.removeDestination,

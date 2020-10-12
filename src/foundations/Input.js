@@ -5,9 +5,8 @@ export default class Input extends Stream {
 
   constructor({
     element = null,
-    name = ''
   } = {}) {
-    super({ element, name });
+    super({ element });
     this.redraw = this.redraw.bind(this);
     this.onRedraw = this.onRedraw.bind(this);
     this.isVideo = (this.element instanceof HTMLVideoElement);
