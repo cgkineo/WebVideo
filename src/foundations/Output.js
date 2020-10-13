@@ -12,7 +12,11 @@ export default class Output extends Input {
   set element(value) {
     this._element = value;
     this.frame = new Frame(value);
-    this.context = this.element.getContext('2d');
+    this.context = this.element.getContext('2d', { alpha: true });
+    this.context.webkitImageSmoothingEnabled = false;
+    this.context.mozImageSmoothingEnabled = false;
+    this.context.msImageSmoothingEnabled = false;
+    this.context.imageSmoothingEnabled = false;
   }
 
   get element () {

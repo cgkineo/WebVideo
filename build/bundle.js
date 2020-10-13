@@ -11414,11 +11414,25 @@ var WebGLTexture = /*#__PURE__*/function () {
     type = type || context.UNSIGNED_BYTE;
     this.context = context;
     this.handle = context.createTexture();
-    this.width = width;
-    this.height = height;
+    this._width = width;
+    this._height = height;
     this.format = format;
     this.type = type;
+    this._isIE = window.navigator.userAgent.indexOf('Trident/') !== -1;
+
+    if (this._isIE) {
+      this.canvas = document.createElement('canvas');
+      this.canvasContext = this.canvas.getContext('2d', {
+        alpha: true
+      });
+      this.canvasContext.webkitImageSmoothingEnabled = false;
+      this.canvasContext.mozImageSmoothingEnabled = false;
+      this.canvasContext.msImageSmoothingEnabled = false;
+      this.canvasContext.imageSmoothingEnabled = false;
+    }
+
     this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
+    this.context.pixelStorei(this.context.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     this.context.pixelStorei(this.context.UNPACK_FLIP_Y_WEBGL, true);
     this.context.texParameteri(this.context.TEXTURE_2D, this.context.TEXTURE_MAG_FILTER, this.context.LINEAR);
     this.context.texParameteri(this.context.TEXTURE_2D, this.context.TEXTURE_MIN_FILTER, this.context.LINEAR);
@@ -11431,12 +11445,17 @@ var WebGLTexture = /*#__PURE__*/function () {
   }
 
   _createClass(WebGLTexture, [{
-    key: "setSize",
-    value: function setSize(width, height) {
-      this.width = width;
-      this.height = height;
+    key: "resize",
+    value: function resize() {
+      if (!this._width || !this._height) return;
+
+      if (this._isIE) {
+        this.canvas.height = this._height;
+        this.canvas.width = this._width;
+      }
+
       this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
-      this.context.texImage2D(this.context.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, null);
+      this.context.texImage2D(this.context.TEXTURE_2D, 0, this.format, this._width, this._height, 0, this.format, this.type, null);
     }
   }, {
     key: "loadContentsOf",
@@ -11444,6 +11463,13 @@ var WebGLTexture = /*#__PURE__*/function () {
       this.width = element.width || element.mediaWidth;
       this.height = element.height || element.mediaHeight;
       this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
+
+      if (this._isIE) {
+        this.canvasContext.drawImage(element, 0, 0, this.width, this.height);
+        this.context.texImage2D(this.context.TEXTURE_2D, 0, this.format, this.format, this.type, this.canvas);
+        return;
+      }
+
       this.context.texImage2D(this.context.TEXTURE_2D, 0, this.format, this.format, this.type, element);
     }
   }, {
@@ -11468,6 +11494,26 @@ var WebGLTexture = /*#__PURE__*/function () {
     value: function destroy() {
       this.context.deleteTexture(this.handle);
       this.handle = null;
+    }
+  }, {
+    key: "height",
+    set: function set(value) {
+      if (this._height === value) return;
+      this._height = value;
+      this.resize();
+    },
+    get: function get() {
+      return this._height;
+    }
+  }, {
+    key: "width",
+    set: function set(value) {
+      if (this._width === value) return;
+      this._width = value;
+      this.resize();
+    },
+    get: function get() {
+      return this._width;
     }
   }], [{
     key: "fromElement",
@@ -11658,7 +11704,13 @@ var Output = /*#__PURE__*/function (_Input) {
     set: function set(value) {
       this._element = value;
       this.frame = new _core_Frame__WEBPACK_IMPORTED_MODULE_1__["default"](value);
-      this.context = this.element.getContext('2d');
+      this.context = this.element.getContext('2d', {
+        alpha: true
+      });
+      this.context.webkitImageSmoothingEnabled = false;
+      this.context.mozImageSmoothingEnabled = false;
+      this.context.msImageSmoothingEnabled = false;
+      this.context.imageSmoothingEnabled = false;
     },
     get: function get() {
       return this._element;
@@ -11822,8 +11874,7 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.brightness === value) return;
-      this.options.brightness = value;
-      this.render();
+      this.options.brightness = value; // this.render();
     }
   }, {
     key: "contrast",
@@ -11832,8 +11883,7 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.contrast === value) return;
-      this.options.contrast = value;
-      this.render();
+      this.options.contrast = value; // this.render();
     }
   }, {
     key: "hue",
@@ -11842,8 +11892,7 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.hue === value) return;
-      this.options.hue = value;
-      this.render();
+      this.options.hue = value; // this.render();
     }
   }, {
     key: "saturation",
@@ -11852,8 +11901,7 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.saturation === value) return;
-      this.options.saturation = value;
-      this.render();
+      this.options.saturation = value; // this.render();
     }
   }]);
 
@@ -11914,7 +11962,13 @@ var Copy = /*#__PURE__*/function (_Stream) {
     _this = _super.call(this, {
       element: document.createElement('canvas')
     });
-    _this.context = _this.element.getContext('2d');
+    _this.context = _this.element.getContext('2d', {
+      alpha: true
+    });
+    _this.context.webkitImageSmoothingEnabled = false;
+    _this.context.mozImageSmoothingEnabled = false;
+    _this.context.msImageSmoothingEnabled = false;
+    _this.context.imageSmoothingEnabled = false;
     return _this;
   }
 
@@ -11926,7 +11980,7 @@ var Copy = /*#__PURE__*/function (_Stream) {
       /** @type {Frame} */
 
       var frame = source.frame;
-      frame.setDimensionsOn(this.frame);
+      frame.setDimensions(this.frame);
       this.context.drawImage(frame.element, 0, 0, frame.width, frame.height);
     }
   }]);
@@ -12005,8 +12059,8 @@ var Displacement = /*#__PURE__*/function (_Stream) {
     _this.firstTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
     _this.secondTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
     _this.displacementImg = document.createElement('img');
-    _this.displacementImg.src = options.displacement;
     _this.displacementTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
+    _this.urlResolver = document.createElement('a');
     _this.shader = new _shaders_Displacement__WEBPACK_IMPORTED_MODULE_3__["default"](webgl.context, {
       firstTexture: _this.firstTexture,
       secondTexture: _this.secondTexture,
@@ -12030,8 +12084,10 @@ var Displacement = /*#__PURE__*/function (_Stream) {
 
       this.firstTexture.loadContentsOf(frame1.element);
       this.secondTexture.loadContentsOf(frame2.element);
+      this.urlResolver.href = this.options.displacement;
 
-      if (this._displacementSrc !== this.displacementImg.src) {
+      if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
+        this.displacementImg.src = this.options.displacement;
         this.displacementTexture.loadContentsOf(this.displacementImg);
         this._displacementSrc = this.displacementImg.src;
       }
@@ -12045,8 +12101,7 @@ var Displacement = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value;
-      this.render();
+      this.options.amount = value; // this.render();
     }
   }]);
 
@@ -12153,8 +12208,7 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value;
-      this.render();
+      this.options.amount = value; // this.render();
     }
   }]);
 
@@ -12260,8 +12314,7 @@ var Sepia = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value;
-      this.render();
+      this.options.amount = value; // this.render();
     }
   }]);
 

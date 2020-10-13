@@ -45,7 +45,7 @@ export default class Color extends Stream {
   set amount(value) {
     if (this.options.amount === value) return;
     this.options.amount = value;
-    this.render();
+    // this.render();
   }
 
 }

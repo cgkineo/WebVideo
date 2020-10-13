@@ -20,8 +20,8 @@ export default class Displacement extends Stream {
     this.firstTexture = new WebGLTexture(webgl.context);
     this.secondTexture = new WebGLTexture(webgl.context);
     this.displacementImg = document.createElement('img');
-    this.displacementImg.src = options.displacement;
     this.displacementTexture = new WebGLTexture(webgl.context);
+    this.urlResolver = document.createElement('a');
     this.shader = new DisplacementShader(webgl.context, {
       firstTexture: this.firstTexture,
       secondTexture: this.secondTexture,
@@ -40,7 +40,9 @@ export default class Displacement extends Stream {
     }
     this.firstTexture.loadContentsOf(frame1.element);
     this.secondTexture.loadContentsOf(frame2.element);
-    if (this._displacementSrc !== this.displacementImg.src) {
+    this.urlResolver.href = this.options.displacement;
+    if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
+      this.displacementImg.src = this.options.displacement;
       this.displacementTexture.loadContentsOf(this.displacementImg);
       this._displacementSrc = this.displacementImg.src;
     }
@@ -54,7 +56,7 @@ export default class Displacement extends Stream {
   set amount(value) {
     if (this.options.amount === value) return;
     this.options.amount = value;
-    this.render();
+    // this.render();
   }
 
 }

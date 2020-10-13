@@ -7,7 +7,11 @@ export default class Copy extends Stream {
     super({
       element: document.createElement('canvas')
     });
-    this.context = this.element.getContext('2d');
+    this.context = this.element.getContext('2d', { alpha: true });
+    this.context.webkitImageSmoothingEnabled = false;
+    this.context.mozImageSmoothingEnabled = false;
+    this.context.msImageSmoothingEnabled = false;
+    this.context.imageSmoothingEnabled = false;
   }
 
   render() {
@@ -15,7 +19,7 @@ export default class Copy extends Stream {
     if (!source) return;
     /** @type {Frame} */
     const frame = source.frame;
-    frame.setDimensionsOn(this.frame);
+    frame.setDimensions(this.frame);
     this.context.drawImage(frame.element, 0, 0, frame.width, frame.height);
   }
 

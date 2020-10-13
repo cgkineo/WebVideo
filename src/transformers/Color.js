@@ -45,7 +45,7 @@ export default class Color extends Stream {
   set brightness(value) {
     if (this.options.brightness === value) return;
     this.options.brightness = value;
-    this.render();
+    // this.render();
   }
 
   get contrast() {
@@ -55,7 +55,7 @@ export default class Color extends Stream {
   set contrast(value) {
     if (this.options.contrast === value) return;
     this.options.contrast = value;
-    this.render();
+    // this.render();
   }
 
   get hue() {
@@ -65,7 +65,7 @@ export default class Color extends Stream {
   set hue(value) {
     if (this.options.hue === value) return;
     this.options.hue = value;
-    this.render();
+    // this.render();
   }
 
   get saturation() {
@@ -75,7 +75,7 @@ export default class Color extends Stream {
   set saturation(value) {
     if (this.options.saturation === value) return;
     this.options.saturation = value;
-    this.render();
+    // this.render();
   }
 
 }

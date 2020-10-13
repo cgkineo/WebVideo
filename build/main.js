@@ -35,7 +35,6 @@
     element: 'canvas'
   });
 
-
 // # Plumb stream together so that data flows appropriately
 
   // ## fader1 is pulling data from video1 and video2 and pushing data to canvas1
