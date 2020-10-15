@@ -63,10 +63,6 @@ export default class WebGLTexture {
   loadContentsOf(element) {
     this.width = element.width || element.mediaWidth;
     this.height = element.height || element.mediaHeight;
-    // TODO:
-    // 1. copy the texture if in the same context
-    // 2a. if ie11 and video, copy video to canvas, load texture from canvas
-    // 2b. load texture from element
     this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
     if (this._isIE) {
       this.canvasContext.drawImage(element, 0, 0, this.width, this.height);

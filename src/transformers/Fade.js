@@ -3,7 +3,7 @@ import WebGL from '../core/WebGL';
 import WebGLTexture from '../core/WebGLTexture';
 import FadeShader from './shaders/Fade';
 
-export default class Color extends Stream {
+export default class Fade extends Stream {
 
   /**
    * @param {Object} options
