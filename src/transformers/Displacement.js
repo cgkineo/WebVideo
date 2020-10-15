@@ -11,18 +11,15 @@ export default class Displacement extends Stream {
    * @param {number} options.displacement
    */
   constructor(options = {}) {
-    const webgl = new WebGL();
-    super({
-      element: webgl.canvas
-    });
-    this.options = options;
-    this.webgl = webgl;
-    this.firstTexture = new WebGLTexture(webgl.context);
-    this.secondTexture = new WebGLTexture(webgl.context);
+    super(options);
+    this.webgl = new WebGL();
+    this.element = this.webgl.canvas;
+    this.firstTexture = new WebGLTexture(this.webgl.context);
+    this.secondTexture = new WebGLTexture(this.webgl.context);
     this.displacementImg = document.createElement('img');
-    this.displacementTexture = new WebGLTexture(webgl.context);
+    this.displacementTexture = new WebGLTexture(this.webgl.context);
     this.urlResolver = document.createElement('a');
-    this.shader = new DisplacementShader(webgl.context, {
+    this.shader = new DisplacementShader(this.webgl.context, {
       firstTexture: this.firstTexture,
       secondTexture: this.secondTexture,
       displacementTexture: this.displacementTexture
@@ -33,13 +30,11 @@ export default class Displacement extends Stream {
     const source1 = this.sources[0];
     const source2 = this.sources[1];
     if (!source1 || !source2) return;
-    const frame1 = source1.frame;
-    const frame2 = source2.frame;
-    if (frame1.setDimensions(this.webgl)) {
+    if (source1.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
-    this.firstTexture.loadContentsOf(frame1.element);
-    this.secondTexture.loadContentsOf(frame2.element);
+    this.firstTexture.loadContentsOf(source1.element);
+    this.secondTexture.loadContentsOf(source2.element);
     this.urlResolver.href = this.options.displacement;
     if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
       this.displacementImg.src = this.options.displacement;
@@ -56,7 +51,7 @@ export default class Displacement extends Stream {
   set amount(value) {
     if (this.options.amount === value) return;
     this.options.amount = value;
-    // this.render();
+    this.changed();
   }
 
 }

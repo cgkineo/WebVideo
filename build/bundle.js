@@ -10563,98 +10563,6 @@ var Events = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ "./src/core/Frame.js":
-/*!***************************!*\
-  !*** ./src/core/Frame.js ***!
-  \***************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Frame; });
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var Frame = /*#__PURE__*/function () {
-  function Frame() {
-    var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-    _classCallCheck(this, Frame);
-
-    this.element = element;
-  }
-
-  _createClass(Frame, [{
-    key: "setDimensions",
-    value: function setDimensions(setOns) {
-      if (!(setOns instanceof Array)) {
-        setOns = [setOns];
-      }
-
-      var width = this.width;
-      var height = this.height;
-      var isChanged = false;
-      setOns.forEach(function (setOn) {
-        if (setOn.width === width && setOn.height === height) return;
-        isChanged = true;
-        setOn.width = width;
-        setOn.height = height;
-      }.bind(this));
-      return isChanged;
-    }
-  }, {
-    key: "height",
-    set: function set(value) {
-      if (!(this._element instanceof HTMLCanvasElement)) {
-        throw new Error("Cannot only set height on canvas elements");
-      }
-
-      this._element.height = value;
-    },
-    get: function get() {
-      return this._element.height || this._element.videoHeight || this._element.originalHeight || this._element.clientHeight;
-    }
-  }, {
-    key: "width",
-    set: function set(value) {
-      if (!(this._element instanceof HTMLCanvasElement)) {
-        throw new Error("Cannot only set width on canvas elements");
-      }
-
-      this._element.width = value;
-    },
-    get: function get() {
-      return this._element.width || this._element.videoWidth || this._element.originalWidth || this._element.clientWidth;
-    }
-  }, {
-    key: "element",
-    set: function set(value) {
-      if (value instanceof Frame) {
-        value = value.element;
-      }
-
-      if (!(value instanceof HTMLElement) || !(value instanceof HTMLImageElement) && !(value instanceof HTMLVideoElement) && !(value instanceof HTMLCanvasElement)) {
-        throw new Error("Frame must contain a canvas, img or video element");
-      }
-
-      this._element = value;
-    },
-    get: function get() {
-      return this._element;
-    }
-  }]);
-
-  return Frame;
-}();
-
-
-
-/***/ }),
-
 /***/ "./src/core/RAFLoop.js":
 /*!*****************************!*\
   !*** ./src/core/RAFLoop.js ***!
@@ -10685,9 +10593,14 @@ var RAFLoop = /*#__PURE__*/function () {
   _createClass(RAFLoop, [{
     key: "add",
     value: function add(callback) {
-      if (this.callbacks.find(function (cb) {
+      var index = this.callbacks.findIndex(function (cb) {
         return cb === callback;
-      })) return;
+      });
+
+      if (index !== -1) {
+        this.callbacks.splice(index, 1);
+      }
+
       this.callbacks.push(callback);
       if (this.isTicking) return;
       this.kick();
@@ -10700,15 +10613,19 @@ var RAFLoop = /*#__PURE__*/function () {
         return;
       }
 
+      this.isTicking = true;
       requestAnimationFrame(this.tick);
     }
   }, {
     key: "tick",
     value: function tick() {
-      this.isTicking = true; // Take a copy to prevent circular processing
-
+      // Take a copy to prevent circular processing
       var callbacks = this.callbacks.slice(0);
-      this.callbacks.length = 0;
+      this.callbacks.length = 0; // Sort by order if defined
+
+      callbacks.sort(function (a, b) {
+        return (a.order || 0) - (b.order || 0);
+      });
 
       while (callbacks.length) {
         var callback = callbacks.shift();
@@ -10742,7 +10659,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Stream; });
 /* harmony import */ var _Events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Events */ "./src/core/Events.js");
 /* harmony import */ var _Event__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Event */ "./src/core/Event.js");
-/* harmony import */ var _Frame__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Frame */ "./src/core/Frame.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -10768,7 +10684,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-
 var Stream = /*#__PURE__*/function (_Events) {
   _inherits(Stream, _Events);
 
@@ -10783,8 +10698,10 @@ var Stream = /*#__PURE__*/function (_Events) {
     }
   }]);
 
-  function Stream(options) {
+  function Stream() {
     var _this;
+
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Stream);
 
@@ -10799,12 +10716,10 @@ var Stream = /*#__PURE__*/function (_Events) {
     /** @type {[number]} */
 
     _this.sourceLastChanged = [];
-    /** @type {Frame} */
+    _this.lastRendered = 0;
+    /** @type {HTMLElement} */
 
-    _this._frame = null;
-    /** @type {HTMLVideoElement} */
-
-    _this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
+    _this._element = null;
 
     _this.on({
       "pipe": _this.addDestination,
@@ -10817,13 +10732,31 @@ var Stream = /*#__PURE__*/function (_Events) {
   }
 
   _createClass(Stream, [{
-    key: "pipe",
+    key: "applyDimensions",
+    value: function applyDimensions(setOns) {
+      if (!(setOns instanceof Array)) {
+        setOns = [setOns];
+      }
 
+      var width = this.width;
+      var height = this.height;
+      var isChanged = false;
+      setOns.forEach(function (setOn) {
+        if (setOn.width === width && setOn.height === height) return;
+        isChanged = true;
+        setOn.width = width;
+        setOn.height = height;
+      }.bind(this));
+      return isChanged;
+    }
     /**
      * Connect to a destination stream
      * @param {Stream} destination
      * @param {number} inputIndex Input index for the destination stream
      */
+
+  }, {
+    key: "pipe",
     value: function pipe(destination) {
       var inputIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       this.trigger('pipe', destination);
@@ -10965,8 +10898,21 @@ var Stream = /*#__PURE__*/function (_Events) {
   }, {
     key: "onSourceChanged",
     value: function onSourceChanged(event, inputIndex) {
-      this.render();
+      // this.render();
       this.changed(event, inputIndex);
+    }
+  }, {
+    key: "cascadeRender",
+    value: function cascadeRender() {
+      for (var i = 0, l = this.sources.length; i < l; i++) {
+        var source = this.sources[i];
+        ;
+        if (source.lastChanged < this.lastRendered) continue;
+        source.cascadeRender();
+      }
+
+      this.lastRendered = Date.now();
+      this.render();
     }
   }, {
     key: "render",
@@ -10984,6 +10930,7 @@ var Stream = /*#__PURE__*/function (_Events) {
         name: 'changed',
         target: this
       });
+      this.lastChanged = Date.now();
       this.onChanged(event, inputIndex);
       this.trigger('changed', event, inputIndex);
       return this;
@@ -10998,29 +10945,40 @@ var Stream = /*#__PURE__*/function (_Events) {
     key: "onChanged",
     value: function onChanged(event, inputIndex) {}
   }, {
-    key: "element",
+    key: "height",
     set: function set(value) {
-      this._element = value;
-      this.frame = new _Frame__WEBPACK_IMPORTED_MODULE_2__["default"](value);
-    }
-    /**
-     * @type {HTMLVideoElement}
-     */
-    ,
+      if (!(this._element instanceof HTMLCanvasElement) && !(this._element instanceof OffscreenCanvas)) {
+        throw new Error("Cannot only set height on canvas elements");
+      }
+
+      this._element.height = value;
+    },
     get: function get() {
-      return this._element;
+      return this._element.height || this._element.videoHeight || this._element.originalHeight || this._element.clientHeight;
     }
   }, {
-    key: "frame",
+    key: "width",
     set: function set(value) {
-      this._frame = value;
-    }
-    /**
-     * @type {Frame}
-     */
-    ,
+      if (!(this._element instanceof HTMLCanvasElement) && !(this._element instanceof OffscreenCanvas)) {
+        throw new Error("Cannot only set width on canvas elements");
+      }
+
+      this._element.width = value;
+    },
     get: function get() {
-      return this._frame;
+      return this._element.width || this._element.videoWidth || this._element.originalWidth || this._element.clientWidth;
+    }
+  }, {
+    key: "element",
+    set: function set(value) {
+      if (window.OffscreenCanvas && !(value instanceof window.OffscreenCanvas) && !(value instanceof window.HTMLImageElement) && !(value instanceof window.HTMLVideoElement) && !(value instanceof window.HTMLAudioElement) && !(value instanceof window.HTMLCanvasElement)) {
+        throw new Error("Stream.element must be a canvas, img, video or audio element");
+      }
+
+      this._element = value;
+    },
+    get: function get() {
+      return this._element;
     }
   }]);
 
@@ -11101,29 +11059,40 @@ var Streams = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return WebGL; });
+/* harmony import */ var _WebGLTexture__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./WebGLTexture */ "./src/core/WebGLTexture.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+
+
 var WebGL = /*#__PURE__*/function () {
   function WebGL() {
     _classCallCheck(this, WebGL);
 
-    this.canvas = document.createElement('canvas');
+    this.canvas = window.OffscreenCanvas ? new window.OffscreenCanvas(0, 0) : document.createElement('canvas');
 
     try {
-      this.context = this.canvas.getContext("webgl", {
-        alpha: true
-      }) || this.canvas.getContext('experimental-webgl', {
-        alpha: true
-      });
+      var defaults = {
+        alpha: false,
+        antialias: true,
+        depth: true,
+        failIfMajorPerformanceCaveat: false,
+        powerPreference: "default",
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: false,
+        stencil: false,
+        desynchronized: false
+      };
+      this.context = this.canvas.getContext("webgl", defaults) || this.canvas.getContext('experimental-webgl', defaults);
     } catch (e) {}
 
     if (!this.context) throw 'No WebGL support';
     this.context.blendFunc(this.context.SRC_ALPHA, this.context.ONE_MINUS_SRC_ALPHA);
     this.context.enable(this.context.BLEND);
+    this.framebuffer = new _WebGLTexture__WEBPACK_IMPORTED_MODULE_0__["default"](this.context);
   }
 
   _createClass(WebGL, [{
@@ -11138,6 +11107,7 @@ var WebGL = /*#__PURE__*/function () {
     },
     set: function set(value) {
       this.canvas.width = value;
+      this.framebuffer.width = value;
       this.resize();
     }
   }, {
@@ -11147,6 +11117,7 @@ var WebGL = /*#__PURE__*/function () {
     },
     set: function set(value) {
       this.canvas.height = value;
+      this.framebuffer.height = value;
       this.resize();
     }
   }]);
@@ -11193,6 +11164,7 @@ var WebGLShader = /*#__PURE__*/function () {
     var vertexSource = 'precision highp float;' + this.vertexSource;
     var fragmentSource = 'precision highp float;' + this.fragmentSource;
     this.uniformLocations = {};
+    this.uniformValues = {};
     this.textureStore = {};
     this.textureUnit = 0;
     this.context = context;
@@ -11229,10 +11201,21 @@ var WebGLShader = /*#__PURE__*/function () {
     key: "uniforms",
     value: function uniforms(_uniforms) {
       if (!_uniforms) return this;
+      var hasChanged = false;
+
+      for (var name in _uniforms) {
+        if (!_uniforms.hasOwnProperty(name)) continue;
+        if (this.uniformValues[name] === _uniforms[name]) continue;
+        hasChanged = true;
+        break;
+      }
+
+      if (!hasChanged) return this;
       this.context.useProgram(this.program);
 
       for (var name in _uniforms) {
         if (!_uniforms.hasOwnProperty(name)) continue;
+        this.uniformValues[name] = _uniforms[name];
         var location = this.uniformLocations[name] = this.uniformLocations[name] || this.context.getUniformLocation(this.program, name); // Will be null if the uniform isn't used in the shader
 
         if (location === null) continue;
@@ -11405,13 +11388,14 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var WebGLTexture = /*#__PURE__*/function () {
-  function WebGLTexture(context, width, height, format, type) {
+  function WebGLTexture(context) {
+    var width = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var height = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+    var format = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : context.RGBA;
+    var type = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : context.UNSIGNED_BYTE;
+
     _classCallCheck(this, WebGLTexture);
 
-    width = width || 0;
-    height = height || 0;
-    format = format || context.RGBA;
-    type = type || context.UNSIGNED_BYTE;
     this.context = context;
     this.handle = context.createTexture();
     this._width = width;
@@ -11421,7 +11405,7 @@ var WebGLTexture = /*#__PURE__*/function () {
     this._isIE = window.navigator.userAgent.indexOf('Trident/') !== -1;
 
     if (this._isIE) {
-      this.canvas = document.createElement('canvas');
+      this.canvas = window.OffscreenCanvas ? new window.OffscreenCanvas(0, 0) : document.createElement('canvas');
       this.canvasContext = this.canvas.getContext('2d', {
         alpha: true
       });
@@ -11461,7 +11445,11 @@ var WebGLTexture = /*#__PURE__*/function () {
     key: "loadContentsOf",
     value: function loadContentsOf(element) {
       this.width = element.width || element.mediaWidth;
-      this.height = element.height || element.mediaHeight;
+      this.height = element.height || element.mediaHeight; // TODO:
+      // 1. copy the texture if in the same context
+      // 2a. if ie11 and video, copy video to canvas, load texture from canvas
+      // 2b. load texture from element
+
       this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
 
       if (this._isIE) {
@@ -11555,6 +11543,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
@@ -11580,44 +11572,58 @@ var Input = /*#__PURE__*/function (_Stream) {
   function Input() {
     var _this;
 
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$element = _ref.element,
-        element = _ref$element === void 0 ? null : _ref$element;
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Input);
 
-    _this = _super.call(this, {
-      element: element
-    });
-    _this.redraw = _this.redraw.bind(_assertThisInitialized(_this));
-    _this.onRedraw = _this.onRedraw.bind(_assertThisInitialized(_this));
+    _this = _super.call(this);
+    /** @type {HTMLVideoElement|HTMLImageElement|HTMLCanvasElement|HTMLAudioElement} */
+
+    _this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
+    _this.changed = _this.changed.bind(_assertThisInitialized(_this)); // Always push inputs the front to cascade correctly on each frame
+
+    _this.changed.order = -Infinity;
     _this.isVideo = _this.element instanceof HTMLVideoElement;
-    _this._isIn = false;
 
     if (_this.isVideo) {
-      _this.element.addEventListener('play', _this.redraw);
+      _this.element.addEventListener('play', _this.changed);
 
-      _this.element.addEventListener('timeupdate', _this.redraw);
+      _this.element.addEventListener('timeupdate', _this.changed);
+
+      _this._lastSeconds = 0;
     }
 
     return _this;
   }
-  /**
-   * Trigger onRedraw, throttled to the framerate and inside an animation frame
-   */
-
 
   _createClass(Input, [{
-    key: "redraw",
-    value: function redraw() {
-      _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.onRedraw);
+    key: "changed",
+
+    /**
+     * Trigger changed repeatedly for videos, throttle to the framerate and inside an animation frame
+     */
+    value: function changed() {
+      _get(_getPrototypeOf(Input.prototype), "changed", this).call(this);
+
+      if (!this.isVideo || this.element.paused) return;
+      _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.changed);
     }
   }, {
-    key: "onRedraw",
-    value: function onRedraw() {
+    key: "element",
+    set: function set(value) {
+      if (!(value instanceof HTMLVideoElement) && !(value instanceof HTMLImageElement) && !(value instanceof HTMLCanvasElement) && !(value instanceof HTMLAudioElement)) {
+        throw new Error('Input must be an HTMLVideoElement, HTMLImageElement, HTMLCanvasElement or HTMLAudioElement');
+      }
+
+      this._element = value;
       this.changed();
-      if (!this.isVideo || this.element.paused) return;
-      _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.redraw);
+    }
+    /**
+     * @type {HTMLVideoElement}
+     */
+    ,
+    get: function get() {
+      return this._element;
     }
   }]);
 
@@ -11638,8 +11644,8 @@ var Input = /*#__PURE__*/function (_Stream) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Output; });
-/* harmony import */ var _Input__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Input */ "./src/foundations/Input.js");
-/* harmony import */ var _core_Frame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/Frame */ "./src/core/Frame.js");
+/* harmony import */ var _core_Stream__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/Stream */ "./src/core/Stream.js");
+/* harmony import */ var _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/RAFLoop */ "./src/core/RAFLoop.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -11665,52 +11671,62 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-var Output = /*#__PURE__*/function (_Input) {
-  _inherits(Output, _Input);
+var Output = /*#__PURE__*/function (_Stream) {
+  _inherits(Output, _Stream);
 
   var _super = _createSuper(Output);
 
   function Output() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$element = _ref.element,
-        element = _ref$element === void 0 ? null : _ref$element;
+    var _this;
+
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Output);
 
-    return _super.call(this, {
-      element: element
+    _this = _super.call(this);
+    _this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
+    _this.context = _this.element.getContext('2d', {
+      alpha: false
     });
+    _this.context.webkitImageSmoothingEnabled = false;
+    _this.context.mozImageSmoothingEnabled = false;
+    _this.context.msImageSmoothingEnabled = false;
+    _this.context.imageSmoothingEnabled = false; // Always push outputs to the end as each frame will be most up to date
+
+    _this.update = _this.update.bind(_assertThisInitialized(_this));
+    _this.update.order = Infinity;
+    return _this;
   }
 
   _createClass(Output, [{
-    key: "onSourceChanged",
-    value: function onSourceChanged() {
-      // Limit changes to framerate
-      this.redraw();
-    }
-  }, {
-    key: "onRedraw",
-    value: function onRedraw() {
-      if (!(this.element instanceof HTMLCanvasElement)) return;
+    key: "render",
+    value: function render() {
       var source = this.sources[0];
       /** @type {Frame} */
 
-      var frame = source.frame;
-      frame.setDimensions(this.frame);
-      this.context.drawImage(frame.element, 0, 0, frame.width, frame.height);
+      source.applyDimensions(this.element);
+      this.context.drawImage(source.element, 0, 0, source.width, source.height);
+    }
+  }, {
+    key: "onSourceChanged",
+    value: function onSourceChanged() {
+      // Limit renders to framerate
+      _core_RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.update);
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      if (!(this.element instanceof window.HTMLCanvasElement) && !(value instanceof window.OffscreenCanvas)) return;
+      this.cascadeRender();
     }
   }, {
     key: "element",
     set: function set(value) {
+      if (!(value instanceof window.HTMLCanvasElement) && !(value instanceof window.OffscreenCanvas)) {
+        throw new Error('Output element can only be an HTMLCanvasElement or OffscreenCanvas instance');
+      }
+
       this._element = value;
-      this.frame = new _core_Frame__WEBPACK_IMPORTED_MODULE_1__["default"](value);
-      this.context = this.element.getContext('2d', {
-        alpha: true
-      });
-      this.context.webkitImageSmoothingEnabled = false;
-      this.context.mozImageSmoothingEnabled = false;
-      this.context.msImageSmoothingEnabled = false;
-      this.context.imageSmoothingEnabled = false;
     },
     get: function get() {
       return this._element;
@@ -11718,7 +11734,7 @@ var Output = /*#__PURE__*/function (_Input) {
   }]);
 
   return Output;
-}(_Input__WEBPACK_IMPORTED_MODULE_0__["default"]);
+}(_core_Stream__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 
 
@@ -11728,7 +11744,7 @@ var Output = /*#__PURE__*/function (_Input) {
 /*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
-/*! exports provided: Stream, Streams, Input, Output, Color, Copy, Displacement, Fade, Sepia */
+/*! exports provided: Stream, Streams, Input, Output, Color, Displacement, Fade, Sepia */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11750,18 +11766,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _transformers_Color__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./transformers/Color */ "./src/transformers/Color.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _transformers_Color__WEBPACK_IMPORTED_MODULE_5__["default"]; });
 
-/* harmony import */ var _transformers_Copy__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./transformers/Copy */ "./src/transformers/Copy.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Copy", function() { return _transformers_Copy__WEBPACK_IMPORTED_MODULE_6__["default"]; });
+/* harmony import */ var _transformers_Displacement__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./transformers/Displacement */ "./src/transformers/Displacement.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Displacement", function() { return _transformers_Displacement__WEBPACK_IMPORTED_MODULE_6__["default"]; });
 
-/* harmony import */ var _transformers_Displacement__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./transformers/Displacement */ "./src/transformers/Displacement.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Displacement", function() { return _transformers_Displacement__WEBPACK_IMPORTED_MODULE_7__["default"]; });
+/* harmony import */ var _transformers_Fade__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./transformers/Fade */ "./src/transformers/Fade.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Fade", function() { return _transformers_Fade__WEBPACK_IMPORTED_MODULE_7__["default"]; });
 
-/* harmony import */ var _transformers_Fade__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./transformers/Fade */ "./src/transformers/Fade.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Fade", function() { return _transformers_Fade__WEBPACK_IMPORTED_MODULE_8__["default"]; });
-
-/* harmony import */ var _transformers_Sepia__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./transformers/Sepia */ "./src/transformers/Sepia.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Sepia", function() { return _transformers_Sepia__WEBPACK_IMPORTED_MODULE_9__["default"]; });
-
+/* harmony import */ var _transformers_Sepia__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./transformers/Sepia */ "./src/transformers/Sepia.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Sepia", function() { return _transformers_Sepia__WEBPACK_IMPORTED_MODULE_8__["default"]; });
 
 
 
@@ -11787,10 +11799,9 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Color; });
 /* harmony import */ var _core_Stream__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/Stream */ "./src/core/Stream.js");
-/* harmony import */ var _core_Frame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/Frame */ "./src/core/Frame.js");
-/* harmony import */ var _core_WebGL__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/WebGL */ "./src/core/WebGL.js");
-/* harmony import */ var _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/WebGLTexture */ "./src/core/WebGLTexture.js");
-/* harmony import */ var _shaders_Color__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/Color */ "./src/transformers/shaders/Color.js");
+/* harmony import */ var _core_WebGL__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/WebGL */ "./src/core/WebGL.js");
+/* harmony import */ var _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/WebGLTexture */ "./src/core/WebGLTexture.js");
+/* harmony import */ var _shaders_Color__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/Color */ "./src/transformers/shaders/Color.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -11812,7 +11823,6 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
 
 
 
@@ -11838,14 +11848,11 @@ var Color = /*#__PURE__*/function (_Stream) {
 
     _classCallCheck(this, Color);
 
-    var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_2__["default"]();
-    _this = _super.call(this, {
-      element: webgl.canvas
-    });
-    _this.options = options;
-    _this.webgl = webgl;
-    _this.texture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_3__["default"](webgl.context);
-    _this.shader = new _shaders_Color__WEBPACK_IMPORTED_MODULE_4__["default"](webgl.context, {
+    _this = _super.call(this, options);
+    _this.webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    _this.element = _this.webgl.canvas;
+    _this.texture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
+    _this.shader = new _shaders_Color__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl.context, {
       texture: _this.texture
     });
     return _this;
@@ -11856,15 +11863,12 @@ var Color = /*#__PURE__*/function (_Stream) {
     value: function render() {
       var source = this.sources[0];
       if (!source) return;
-      /** @type {Frame} */
 
-      var frame = source.frame;
-
-      if (frame.setDimensions(this.webgl)) {
+      if (source.applyDimensions(this.webgl)) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(frame.element);
+      this.texture.loadContentsOf(source.element);
       this.shader.run(this.options);
     }
   }, {
@@ -11874,7 +11878,8 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.brightness === value) return;
-      this.options.brightness = value; // this.render();
+      this.options.brightness = value;
+      this.changed();
     }
   }, {
     key: "contrast",
@@ -11883,7 +11888,8 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.contrast === value) return;
-      this.options.contrast = value; // this.render();
+      this.options.contrast = value;
+      this.changed();
     }
   }, {
     key: "hue",
@@ -11892,7 +11898,8 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.hue === value) return;
-      this.options.hue = value; // this.render();
+      this.options.hue = value;
+      this.changed();
     }
   }, {
     key: "saturation",
@@ -11901,91 +11908,12 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.saturation === value) return;
-      this.options.saturation = value; // this.render();
+      this.options.saturation = value;
+      this.changed();
     }
   }]);
 
   return Color;
-}(_core_Stream__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
-
-
-/***/ }),
-
-/***/ "./src/transformers/Copy.js":
-/*!**********************************!*\
-  !*** ./src/transformers/Copy.js ***!
-  \**********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Copy; });
-/* harmony import */ var _core_Stream__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/Stream */ "./src/core/Stream.js");
-/* harmony import */ var _core_Frame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/Frame */ "./src/core/Frame.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-
-
-
-var Copy = /*#__PURE__*/function (_Stream) {
-  _inherits(Copy, _Stream);
-
-  var _super = _createSuper(Copy);
-
-  function Copy() {
-    var _this;
-
-    _classCallCheck(this, Copy);
-
-    _this = _super.call(this, {
-      element: document.createElement('canvas')
-    });
-    _this.context = _this.element.getContext('2d', {
-      alpha: true
-    });
-    _this.context.webkitImageSmoothingEnabled = false;
-    _this.context.mozImageSmoothingEnabled = false;
-    _this.context.msImageSmoothingEnabled = false;
-    _this.context.imageSmoothingEnabled = false;
-    return _this;
-  }
-
-  _createClass(Copy, [{
-    key: "render",
-    value: function render() {
-      var source = this.sources[0];
-      if (!source) return;
-      /** @type {Frame} */
-
-      var frame = source.frame;
-      frame.setDimensions(this.frame);
-      this.context.drawImage(frame.element, 0, 0, frame.width, frame.height);
-    }
-  }]);
-
-  return Copy;
 }(_core_Stream__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 
@@ -12050,18 +11978,15 @@ var Displacement = /*#__PURE__*/function (_Stream) {
 
     _classCallCheck(this, Displacement);
 
-    var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
-    _this = _super.call(this, {
-      element: webgl.canvas
-    });
-    _this.options = options;
-    _this.webgl = webgl;
-    _this.firstTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
-    _this.secondTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
+    _this = _super.call(this, options);
+    _this.webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    _this.element = _this.webgl.canvas;
+    _this.firstTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
+    _this.secondTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
     _this.displacementImg = document.createElement('img');
-    _this.displacementTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
+    _this.displacementTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
     _this.urlResolver = document.createElement('a');
-    _this.shader = new _shaders_Displacement__WEBPACK_IMPORTED_MODULE_3__["default"](webgl.context, {
+    _this.shader = new _shaders_Displacement__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl.context, {
       firstTexture: _this.firstTexture,
       secondTexture: _this.secondTexture,
       displacementTexture: _this.displacementTexture
@@ -12075,15 +12000,13 @@ var Displacement = /*#__PURE__*/function (_Stream) {
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
-      var frame1 = source1.frame;
-      var frame2 = source2.frame;
 
-      if (frame1.setDimensions(this.webgl)) {
+      if (source1.applyDimensions(this.webgl)) {
         this.shader.resize();
       }
 
-      this.firstTexture.loadContentsOf(frame1.element);
-      this.secondTexture.loadContentsOf(frame2.element);
+      this.firstTexture.loadContentsOf(source1.element);
+      this.secondTexture.loadContentsOf(source2.element);
       this.urlResolver.href = this.options.displacement;
 
       if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
@@ -12101,7 +12024,8 @@ var Displacement = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value; // this.render();
+      this.options.amount = value;
+      this.changed();
     }
   }]);
 
@@ -12169,15 +12093,12 @@ var Color = /*#__PURE__*/function (_Stream) {
 
     _classCallCheck(this, Color);
 
-    var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
-    _this = _super.call(this, {
-      element: webgl.canvas
-    });
-    _this.options = options;
-    _this.webgl = webgl;
-    _this.firstTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
-    _this.secondTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](webgl.context);
-    _this.shader = new _shaders_Fade__WEBPACK_IMPORTED_MODULE_3__["default"](webgl.context, {
+    _this = _super.call(this, options);
+    _this.webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    _this.element = _this.webgl.canvas;
+    _this.firstTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
+    _this.secondTexture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
+    _this.shader = new _shaders_Fade__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl.context, {
       firstTexture: _this.firstTexture,
       secondTexture: _this.secondTexture
     });
@@ -12190,15 +12111,13 @@ var Color = /*#__PURE__*/function (_Stream) {
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
-      var frame1 = source1.frame;
-      var frame2 = source2.frame;
 
-      if (frame1.setDimensions(this.webgl)) {
+      if (source1.applyDimensions(this.webgl)) {
         this.shader.resize();
       }
 
-      this.firstTexture.loadContentsOf(frame1.element);
-      this.secondTexture.loadContentsOf(frame2.element);
+      this.firstTexture.loadContentsOf(source1.element);
+      this.secondTexture.loadContentsOf(source2.element);
       this.shader.run(this.options);
     }
   }, {
@@ -12208,7 +12127,8 @@ var Color = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value; // this.render();
+      this.options.amount = value;
+      this.changed();
     }
   }]);
 
@@ -12230,10 +12150,9 @@ var Color = /*#__PURE__*/function (_Stream) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Sepia; });
 /* harmony import */ var _core_Stream__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/Stream */ "./src/core/Stream.js");
-/* harmony import */ var _core_Frame__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/Frame */ "./src/core/Frame.js");
-/* harmony import */ var _core_WebGL__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/WebGL */ "./src/core/WebGL.js");
-/* harmony import */ var _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/WebGLTexture */ "./src/core/WebGLTexture.js");
-/* harmony import */ var _shaders_Sepia__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shaders/Sepia */ "./src/transformers/shaders/Sepia.js");
+/* harmony import */ var _core_WebGL__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/WebGL */ "./src/core/WebGL.js");
+/* harmony import */ var _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/WebGLTexture */ "./src/core/WebGLTexture.js");
+/* harmony import */ var _shaders_Sepia__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shaders/Sepia */ "./src/transformers/shaders/Sepia.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -12261,7 +12180,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-
 var Sepia = /*#__PURE__*/function (_Stream) {
   _inherits(Sepia, _Stream);
 
@@ -12278,14 +12196,11 @@ var Sepia = /*#__PURE__*/function (_Stream) {
 
     _classCallCheck(this, Sepia);
 
-    var webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_2__["default"]();
-    _this = _super.call(this, {
-      element: webgl.canvas
-    });
-    _this.options = options;
-    _this.webgl = webgl;
-    _this.texture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_3__["default"](webgl.context);
-    _this.shader = new _shaders_Sepia__WEBPACK_IMPORTED_MODULE_4__["default"](webgl.context, {
+    _this = _super.call(this, options);
+    _this.webgl = new _core_WebGL__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    _this.element = _this.webgl.canvas;
+    _this.texture = new _core_WebGLTexture__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl.context);
+    _this.shader = new _shaders_Sepia__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl.context, {
       texture: _this.texture
     });
     return _this;
@@ -12296,15 +12211,12 @@ var Sepia = /*#__PURE__*/function (_Stream) {
     value: function render() {
       var source = this.sources[0];
       if (!source) return;
-      /** @type {Frame} */
 
-      var frame = source.frame;
-
-      if (frame.setDimensions(this.webgl)) {
+      if (source.applyDimensions(this.webgl)) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(frame.element);
+      this.texture.loadContentsOf(source.element);
       this.shader.run(this.options);
     }
   }, {
@@ -12314,7 +12226,8 @@ var Sepia = /*#__PURE__*/function (_Stream) {
     },
     set: function set(value) {
       if (this.options.amount === value) return;
-      this.options.amount = value; // this.render();
+      this.options.amount = value;
+      this.changed();
     }
   }]);
 

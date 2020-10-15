@@ -10,15 +10,12 @@ export default class Color extends Stream {
    * @param {number} options.amount
    */
   constructor(options = {}) {
-    const webgl = new WebGL();
-    super({
-      element: webgl.canvas
-    });
-    this.options = options;
-    this.webgl = webgl;
-    this.firstTexture = new WebGLTexture(webgl.context);
-    this.secondTexture = new WebGLTexture(webgl.context);
-    this.shader = new FadeShader(webgl.context, {
+    super(options);
+    this.webgl = new WebGL();
+    this.element = this.webgl.canvas;
+    this.firstTexture = new WebGLTexture(this.webgl.context);
+    this.secondTexture = new WebGLTexture(this.webgl.context);
+    this.shader = new FadeShader(this.webgl.context, {
       firstTexture: this.firstTexture,
       secondTexture: this.secondTexture
     });
@@ -28,13 +25,11 @@ export default class Color extends Stream {
     const source1 = this.sources[0];
     const source2 = this.sources[1];
     if (!source1 || !source2) return;
-    const frame1 = source1.frame;
-    const frame2 = source2.frame;
-    if (frame1.setDimensions(this.webgl)) {
+    if (source1.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
-    this.firstTexture.loadContentsOf(frame1.element);
-    this.secondTexture.loadContentsOf(frame2.element);
+    this.firstTexture.loadContentsOf(source1.element);
+    this.secondTexture.loadContentsOf(source2.element);
     this.shader.run(this.options);
   }
 
@@ -45,7 +40,7 @@ export default class Color extends Stream {
   set amount(value) {
     if (this.options.amount === value) return;
     this.options.amount = value;
-    // this.render();
+    this.changed();
   }
 
 }

@@ -1,10 +1,6 @@
 export default class WebGLTexture {
 
-  constructor(context, width, height, format, type) {
-    width = width || 0;
-    height = height || 0;
-    format = format || context.RGBA;
-    type = type || context.UNSIGNED_BYTE;
+  constructor(context, width = 0, height = 0, format = context.RGBA, type = context.UNSIGNED_BYTE) {
     this.context = context;
     this.handle = context.createTexture();
     this._width = width;
@@ -13,7 +9,7 @@ export default class WebGLTexture {
     this.type = type;
     this._isIE = (window.navigator.userAgent.indexOf('Trident/') !== -1);
     if (this._isIE) {
-      this.canvas = document.createElement('canvas');
+      this.canvas = window.OffscreenCanvas ? new window.OffscreenCanvas(0, 0) : document.createElement('canvas');
       this.canvasContext = this.canvas.getContext('2d', { alpha: true });
       this.canvasContext.webkitImageSmoothingEnabled = false;
       this.canvasContext.mozImageSmoothingEnabled = false;
@@ -67,6 +63,10 @@ export default class WebGLTexture {
   loadContentsOf(element) {
     this.width = element.width || element.mediaWidth;
     this.height = element.height || element.mediaHeight;
+    // TODO:
+    // 1. copy the texture if in the same context
+    // 2a. if ie11 and video, copy video to canvas, load texture from canvas
+    // 2b. load texture from element
     this.context.bindTexture(this.context.TEXTURE_2D, this.handle);
     if (this._isIE) {
       this.canvasContext.drawImage(element, 0, 0, this.width, this.height);
@@ -104,3 +104,4 @@ export default class WebGLTexture {
   }
 
 }
+

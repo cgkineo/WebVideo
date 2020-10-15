@@ -3,31 +3,48 @@ import RAFLoop from '../core/RAFLoop';
 
 export default class Input extends Stream {
 
-  constructor({
-    element = null,
-  } = {}) {
-    super({ element });
-    this.redraw = this.redraw.bind(this);
-    this.onRedraw = this.onRedraw.bind(this);
+  constructor(options = {}) {
+    super();
+    /** @type {HTMLVideoElement|HTMLImageElement|HTMLCanvasElement|HTMLAudioElement} */
+    this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
+    this.changed = this.changed.bind(this);
+    // Always push inputs the front to cascade correctly on each frame
+    this.changed.order = -Infinity;
     this.isVideo = (this.element instanceof HTMLVideoElement);
-    this._isIn = false;
     if (this.isVideo) {
-      this.element.addEventListener('play', this.redraw);
-      this.element.addEventListener('timeupdate', this.redraw);
+      this.element.addEventListener('play', this.changed);
+      this.element.addEventListener('timeupdate', this.changed);
+      this._lastSeconds = 0;
     }
   }
 
-  /**
-   * Trigger onRedraw, throttled to the framerate and inside an animation frame
-   */
-  redraw() {
-    RAFLoop.add(this.onRedraw);
+  set element(value) {
+    if (
+      !(value instanceof HTMLVideoElement) &&
+      !(value instanceof HTMLImageElement) &&
+      !(value instanceof HTMLCanvasElement) &&
+      !(value instanceof HTMLAudioElement)
+    ) {
+      throw new Error('Input must be an HTMLVideoElement, HTMLImageElement, HTMLCanvasElement or HTMLAudioElement');
+    }
+    this._element = value;
+    this.changed();
   }
 
-  onRedraw() {
-    this.changed();
+  /**
+   * @type {HTMLVideoElement}
+   */
+  get element() {
+    return this._element;
+  }
+
+  /**
+   * Trigger changed repeatedly for videos, throttle to the framerate and inside an animation frame
+   */
+  changed() {
+    super.changed();
     if (!this.isVideo || this.element.paused) return;
-    RAFLoop.add(this.redraw);
+    RAFLoop.add(this.changed);
   }
 
 }

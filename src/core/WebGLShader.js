@@ -28,6 +28,7 @@ void main() {
     const vertexSource = 'precision highp float;' + this.vertexSource;
     const fragmentSource = 'precision highp float;' + this.fragmentSource;
     this.uniformLocations = {};
+    this.uniformValues = {};
     this.textureStore = {};
     this.textureUnit = 0;
     this.context = context;
@@ -57,9 +58,18 @@ void main() {
 
   uniforms(uniforms) {
     if (!uniforms) return this;
+    let hasChanged = false;
+    for (var name in uniforms) {
+      if (!uniforms.hasOwnProperty(name)) continue;
+      if (this.uniformValues[name] === uniforms[name]) continue;
+      hasChanged = true;
+      break;
+    }
+    if (!hasChanged) return this;
     this.context.useProgram(this.program);
     for (var name in uniforms) {
       if (!uniforms.hasOwnProperty(name)) continue;
+      this.uniformValues[name] = uniforms[name];
       var location = this.uniformLocations[name] = this.uniformLocations[name] ||
         this.context.getUniformLocation(this.program, name);
       // Will be null if the uniform isn't used in the shader

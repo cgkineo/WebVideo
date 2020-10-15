@@ -1,6 +1,5 @@
 import Events from './Events';
 import Event from './Event';
-import Frame from './Frame';
 
 export default class Stream extends Events {
 
@@ -10,7 +9,7 @@ export default class Stream extends Events {
     return Stream._uid++;
   }
 
-  constructor(options) {
+  constructor(options = {}) {
     super();
     this.uid = Stream.getNextId(),
     this.options = options;
@@ -20,10 +19,9 @@ export default class Stream extends Events {
     this.sources = [];
     /** @type {[number]} */
     this.sourceLastChanged = [];
-    /** @type {Frame} */
-    this._frame = null;
-    /** @type {HTMLVideoElement} */
-    this.element = typeof options.element === 'string' ? document.querySelector(options.element) : options.element;
+    this.lastRendered = 0;
+    /** @type {HTMLElement} */
+    this._element = null;
     this.on({
       "pipe": this.addDestination,
       "unpipe": this.removeDestination,
@@ -32,27 +30,65 @@ export default class Stream extends Events {
     });
   }
 
-  set element(value) {
-    this._element = value;
-    this.frame = new Frame(value);
+  set height(value) {
+    if (!(this._element instanceof HTMLCanvasElement) && !(this._element instanceof OffscreenCanvas)) {
+      throw new Error(`Cannot only set height on canvas elements`);
+    }
+    this._element.height = value;
   }
 
-  /**
-   * @type {HTMLVideoElement}
-   */
+  get height() {
+    return this._element.height ||
+      this._element.videoHeight ||
+      this._element.originalHeight ||
+      this._element.clientHeight;
+  }
+
+  set width(value) {
+    if (!(this._element instanceof HTMLCanvasElement) && !(this._element instanceof OffscreenCanvas)) {
+      throw new Error(`Cannot only set width on canvas elements`);
+    }
+    this._element.width = value;
+  }
+
+  get width() {
+    return this._element.width ||
+      this._element.videoWidth ||
+      this._element.originalWidth ||
+      this._element.clientWidth;
+  }
+
+  set element(value) {
+    if (
+      (window.OffscreenCanvas && !(value instanceof window.OffscreenCanvas)) &&
+      !(value instanceof window.HTMLImageElement) &&
+      !(value instanceof window.HTMLVideoElement) &&
+      !(value instanceof window.HTMLAudioElement) &&
+      !(value instanceof window.HTMLCanvasElement)
+    ) {
+      throw new Error(`Stream.element must be a canvas, img, video or audio element`);
+    }
+    this._element = value;
+  }
+
   get element() {
     return this._element;
   }
 
-  set frame(value) {
-    this._frame = value;
-  }
-
-  /**
-   * @type {Frame}
-   */
-  get frame() {
-    return this._frame;
+  applyDimensions(setOns) {
+    if (!(setOns instanceof Array)) {
+      setOns = [setOns];
+    }
+    const width = this.width;
+    const height = this.height;
+    let isChanged = false;
+    setOns.forEach(function(setOn) {
+      if (setOn.width === width && setOn.height === height) return;
+      isChanged = true;
+      setOn.width = width;
+      setOn.height = height;
+    }.bind(this));
+    return isChanged;
   }
 
   /**
@@ -164,8 +200,18 @@ export default class Stream extends Events {
    * @param {Event} event
    */
   onSourceChanged(event, inputIndex) {
-    this.render();
+    // this.render();
     this.changed(event, inputIndex);
+  }
+
+  cascadeRender() {
+    for (let i = 0, l = this.sources.length; i < l; i++) {
+      const source = this.sources[i];;
+      if (source.lastChanged < this.lastRendered) continue;
+      source.cascadeRender();
+    }
+    this.lastRendered = Date.now();
+    this.render();
   }
 
   render() {}
@@ -178,6 +224,7 @@ export default class Stream extends Events {
       name: 'changed',
       target: this
     });
+    this.lastChanged = Date.now();
     this.onChanged(event, inputIndex);
     this.trigger('changed', event, inputIndex);
     return this;
