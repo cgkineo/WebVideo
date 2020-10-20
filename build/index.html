@@ -9,12 +9,12 @@
     </head>
     <body>
         <div>
-            <video id="video1" preload="none" src="c-40.mp4" muted="true" loop="true" controls width="640" height="360">
+            <video id="video1" preload="none" src="c-40.mp4" loop="true" controls width="640" height="360">
             </video>
-            <label>Sepia amount</label><input class="sepia1 control" type="range" min="-100" max="100" value="0"/>
+            <label>Sepia amount</label><input class="sepia1 control" type="range" min="0" max="100" value="0"/>
         </div>
         <div>
-            <video id="video2" preload="none" src="bbb.mp4" muted="true" loop="true" controls width="640" height="360">
+            <video id="video2" preload="none" src="bbb.mp4" loop="true" controls width="640" height="360">
             </video>
             <label>Hue</label><input class="hue2 control" type="range" min="-100" max="100" value="0"/>
             <label>Contrast</label><input class="contrast2 control" type="range" min="-100" max="100" value="0"/>
@@ -27,7 +27,7 @@
         <div>
             <canvas></canvas>
         </div>
-        <script src="bundle.js"></script>
+        <script src="webvideo.js"></script>
         <script src="main.js"></script>
     </body>
 </html>

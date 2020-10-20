@@ -1,20 +1,18 @@
 import '@babel/polyfill';
-import Stream from './core/Stream';
-import Streams from './core/Streams';
-import Input from './foundations/Input';
-import Output from './foundations/Output';
-import Color from './transformers/Color';
-import Displacement from './transformers/Displacement';
-import Fade from './transformers/Fade';
-import Sepia from './transformers/Sepia';
+import VideoContext from './VideoContext';
+import SourceNode from './SourceNode';
+import DestinationNode from './DestinationNode';
+import ColorNode from './ColorNode';
+import DisplacementNode from './DisplacementNode';
+import FadeNode from './FadeNode';
+import SepiaNode from './SepiaNode';
 
 export {
-  Stream,
-  Streams,
-  Input,
-  Output,
-  Color,
-  Displacement,
-  Fade,
-  Sepia
+  VideoContext,
+  SourceNode,
+  DestinationNode,
+  ColorNode,
+  DisplacementNode,
+  FadeNode,
+  SepiaNode
 };

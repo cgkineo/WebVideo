@@ -19,8 +19,8 @@ module.exports = {
   output: {
     path: dest,
     publicPath: 'build/',
-    filename: 'bundle.js',
-    library: 'Stream',
+    filename: 'webvideo.js',
+    library: 'WebVideo',
     libraryTarget: 'umd'
   },
   watch: true,
