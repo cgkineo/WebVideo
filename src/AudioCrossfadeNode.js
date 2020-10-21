@@ -56,4 +56,21 @@ export default class AudioCrossfadeNode extends VideoNode {
     return this._amount;
   }
 
+    /**
+   * Rerender all changed sources origins to destinations
+   */
+  update() {
+    let hasChanged = false;
+    for (let i = 0, l = this.sources.length; i < l; i++) {
+      const source = this.sources[i];
+      // TODO: Ignore inactive sources
+      if (source.lastChanged < this._lastRendered) continue;
+      source.update();
+      hasChanged = true;
+    }
+    if (!hasChanged) return;
+    this._lastRendered = Date.now();
+    this.render();
+  }
+
 }

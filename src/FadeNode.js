@@ -30,6 +30,7 @@ export default class FadeNode extends AudioCrossfadeNode {
     if (source1.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
+    // TODO: Ignore inactive sources
     this.firstTexture.loadContentsOf(source1.mediaElement);
     this.secondTexture.loadContentsOf(source2.mediaElement);
     this.shader.run(this.options);

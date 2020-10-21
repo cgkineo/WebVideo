@@ -21,7 +21,6 @@ export default class WebGL {
     if (!this.canvasWebGLContext) throw 'No WebGL support';
     this.canvasWebGLContext.blendFunc(this.canvasWebGLContext.SRC_ALPHA, this.canvasWebGLContext.ONE_MINUS_SRC_ALPHA);
     this.canvasWebGLContext.enable(this.canvasWebGLContext.BLEND);
-    this.framebuffer = new WebGLTexture(this.canvasWebGLContext);
   }
 
   get width() {
@@ -30,7 +29,6 @@ export default class WebGL {
 
   set width(value) {
     this.canvas.width = value;
-    this.framebuffer.width = value;
     this.resize();
   }
 
@@ -40,7 +38,6 @@ export default class WebGL {
 
   set height(value) {
     this.canvas.height = value;
-    this.framebuffer.height = value;
     this.resize();
   }
 
