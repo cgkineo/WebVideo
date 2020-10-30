@@ -24,9 +24,17 @@ export default class VideoParam {
     //  Based on this.context.currentTime
     // Apply the values according to the outstanding scheduled events
     for (let i = 0, l = this._scheduledChanges.length; i < l; i++) {
-      const scheduledChanged = [i];
-
+      const scheduledChanged = this._scheduledChanges[i];
+      if (scheduledChanged.type == 'SetValue' && !scheduledChanged.inactive) {
+        if (this.context.currentTime >= scheduledChanged.startTime) {
+          this.value = scheduledChanged.value;
+          // mark this scheduled change as actioned
+          scheduledChanged.inactive = true;
+          console.log('modify VideoParam');
+        }
+      }
     }
+    RAFLoop.add(this.changed);
   }
 
   get minValue() {
@@ -63,6 +71,8 @@ export default class VideoParam {
       endTime,
       value
     });
+    // TODO: look for any preceding event, if found schedule the linearRamp to begin at the endTime of the
+    // previous event (either a setValueAtTime or linearRampToValueAtTime)
     RAFLoop.add(this.changed);
   }
 
