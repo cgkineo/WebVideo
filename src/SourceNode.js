@@ -17,16 +17,10 @@ export default class SourceNode extends VideoScheduledSourceNode {
       this.mediaElement.addEventListener('timeupdate', this.changed);
       this._lastSeconds = 0;
     }
-    this._playing = new VideoParam(context, 0, 1, 0, value => {
-      if (this.options.playing === value) return;
-      this.options.playing = value;
-      value == 1 ? this.doStart() : this.doStop();
-      this.changed();
-    });
-
-    this._playhead = new VideoParam(context, 0, Number.MAX_SAFE_INTEGER, 0, value => {
-      if (this.options.playhead === value) return;
-      this.options.playhead = value;
+    this._currentTime = new VideoParam(context, 0, Number.MAX_SAFE_INTEGER, 0, value => {
+      if (!this.isPlayable) return;
+      if (this.options.currentTime === value) return;
+      this.options.currentTime = value;
       console.log('move media time to', value);
       this.mediaElement.currentTime = value;
       this.changed();
@@ -54,13 +48,32 @@ export default class SourceNode extends VideoScheduledSourceNode {
   }
 
   /** @type {VideoParam} */
-  get playing() {
-    return this._playing;
+  get currentTime() {
+    return this._currentTime;
   }
 
-  /** @type {VideoParam} */
-  get playhead() {
-    return this._playhead;
+  async start(when = 0) {
+    if (when === 0) {
+      return this.doStart();
+    }
+    this._currentTime.setValueAtTime(true, when);
+  }
+
+  stop(when = 0) {
+    if (when === 0) {
+      return this.doStop();
+    }
+    this._currentTime.setValueAtTime(false, when);
+  }
+
+  async doStart() {
+    if (!this.isPlayable) return;
+    await this.mediaElement.play();
+  }
+
+  doStop() {
+    if (!this.isPlayable) return;
+    this.mediaElement.pause();
   }
 
   /**
@@ -70,16 +83,6 @@ export default class SourceNode extends VideoScheduledSourceNode {
     super.changed();
     if (!this.isPlayable || this.mediaElement.paused) return;
     RAFLoop.add(this.changed);
-  }
-
-  async doStart() {
-    if (this.isPlayable) {
-      await this.mediaElement.play();
-    }
-  }
-
-  doStop() {
-    if (this.isPlayable) this.mediaElement.pause();
   }
 
 }

@@ -7,6 +7,7 @@ export default class VideoParam {
     this.changed = this.changed.bind(this);
     /** @type {VideoContext} */
     this._context = context;
+    this._type = typeof minValue;
     this._minValue = minValue;
     this._maxValue = maxValue;
     this._updater = updater;
@@ -23,17 +24,27 @@ export default class VideoParam {
     // TODO: see https://www.w3.org/TR/webaudio/#AudioParam
     //  Based on this.context.currentTime
     // Apply the values according to the outstanding scheduled events
+    if (!this._scheduledChanges.length) return;
     for (let i = 0, l = this._scheduledChanges.length; i < l; i++) {
       const scheduledChanged = this._scheduledChanges[i];
-      if (scheduledChanged.type == 'SetValue' && !scheduledChanged.inactive) {
-        if (this.context.currentTime >= scheduledChanged.startTime) {
-          this.value = scheduledChanged.value;
-          // mark this scheduled change as actioned
-          scheduledChanged.inactive = true;
-          console.log('modify VideoParam');
+      if (scheduledChanged.hasOwnProperty('startTime')) {
+        const isExpired = (this.context.currentTime >= scheduledChanged.startTime);
+        if (!isExpired) continue;
+        switch (scheduledChanged.type) {
+          case 'SetValue':
+            let value = scheduledChanged.value;
+            if (scheduledChanged.value instanceof Function) {
+              value = scheduledChanged.value();
+            }
+            this.value = value;
+            // mark this scheduled change as actioned
+            scheduledChanged.isComplete = true;
+            console.log('modify VideoParam');
+            break;
         }
       }
     }
+    this._scheduledChanges = this._scheduledChanges.filter(scheduledChange => !scheduledChange.isComplete);
     RAFLoop.add(this.changed);
   }
 

@@ -1,48 +1,44 @@
 import VideoNode from './VideoNode';
-import RAFLoop from './RAFLoop';
+import VideoParam from './VideoParam';
 
 export default class VideoScheduledSourceNode extends VideoNode {
 
   constructor(context, options = {}) {
     super(context, options);
-    this.check = this.check.bind(this);
-    this._startTime = null;
-    this._stopTime = null;
+    this._started = new VideoParam(context, false, true, false, value => {
+      if (this.options.started === value) return;
+      this.options.started = value;
+      value === true ? this.doStart() : this.doStop();
+      this.changed();
+    });
   }
 
-  check() {
-    const isDue = this._startTime != null && this.context.currentTime >= this._startTime;
-    const isExpired = this._stopTime != null && this.context.currentTime >= this._stopTime;
-
-    // note that with this implementation there is no guarantee how far the playhead of underlying media
-    // will have advanced: it is not guaranteed to have moved (whenStop - whenStart)
-
-    if (isDue && !isExpired) {
-      this._startTime = null;
-      this.doStart();
-    }
-    if (isExpired) {
-      this._stopTime = null;
-      this.doStop();
-    }
-    if (this._startTime != null || this._stopTime != null) {
-      RAFLoop.add(this.check);
-    }
+  /**
+   * Boolean for scheduling start/stop
+   * @type {VideoParam}
+   */
+  get started() {
+    return this._started;
   }
 
-  doStart() {} // to be implemented by subclasses
-  doStop() {} // to be implemented by subclasses
+  /**
+   * To be implemented by subclasses
+   */
+  doStart() {}
 
-  start(when) {
-    // TODO: Based on this.context.currentTime
-    this._startTime = when || 0;
-    RAFLoop.add(this.check);
-  }
+  /**
+   * To be implemented by subclasses
+   */
+  doStop() {}
 
-  stop(when) {
-    // TODO: Based on this.context.currentTime
-    this._stopTime = when || 0;
-    RAFLoop.add(this.check);
-  }
+  /**
+   * To be implemented by subclasses
+   */
+  start(when = 0) {}
+
+  /**
+   * To be implemented by subclasses
+   */
+  stop(when = 0) {}
 
 }

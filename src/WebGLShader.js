@@ -150,21 +150,21 @@ void main() {
     left = left !== undefined ? (left - this.viewport[0]) / this.viewport[2] : 0;
     right = right !== undefined ? (right - this.viewport[0]) / this.viewport[2] : 1;
     bottom = bottom !== undefined ? (bottom - this.viewport[1]) / this.viewport[3] : 1;
-    if (this.canvasWebGLContext.vertexBuffer == null) {
+    if (!this.canvasWebGLContext.vertexBuffer) {
       this.canvasWebGLContext.vertexBuffer = this.canvasWebGLContext.createBuffer();
     }
     this.canvasWebGLContext.bindBuffer(this.canvasWebGLContext.ARRAY_BUFFER, this.canvasWebGLContext.vertexBuffer);
     this.canvasWebGLContext.bufferData(this.canvasWebGLContext.ARRAY_BUFFER, new Float32Array([ left, top, left, bottom, right, top, right, bottom ]), this.canvasWebGLContext.STATIC_DRAW);
-    if (this.canvasWebGLContext.texCoordBuffer == null) {
+    if (!this.canvasWebGLContext.texCoordBuffer) {
       this.canvasWebGLContext.texCoordBuffer = this.canvasWebGLContext.createBuffer();
       this.canvasWebGLContext.bindBuffer(this.canvasWebGLContext.ARRAY_BUFFER, this.canvasWebGLContext.texCoordBuffer);
       this.canvasWebGLContext.bufferData(this.canvasWebGLContext.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 1 ]), this.canvasWebGLContext.STATIC_DRAW);
     }
-    if (this.vertexAttribute == null) {
+    if (!this.vertexAttribute) {
       this.vertexAttribute = this.canvasWebGLContext.getAttribLocation(this.program, 'aVertexPosition');
       this.canvasWebGLContext.enableVertexAttribArray(this.vertexAttribute);
     }
-    if (this.texCoordAttribute == null) {
+    if (!this.texCoordAttribute) {
       this.texCoordAttribute = this.canvasWebGLContext.getAttribLocation(this.program, 'aTextureCoord');
       this.canvasWebGLContext.enableVertexAttribArray(this.texCoordAttribute);
     }
