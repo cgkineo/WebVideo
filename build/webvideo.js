@@ -12093,13 +12093,8 @@ var VideoParam = /*#__PURE__*/function () {
 
           switch (scheduledChanged.type) {
             case 'SetValue':
-              var value = scheduledChanged.value;
-
-              if (scheduledChanged.value instanceof Function) {
-                value = scheduledChanged.value();
-              }
-
-              this.value = value; // mark this scheduled change as actioned
+              this.value = scheduledChanged.value;
+              ; // mark this scheduled change as actioned
 
               scheduledChanged.isComplete = true;
               console.log('modify VideoParam');
@@ -12218,6 +12213,10 @@ var VideoParam = /*#__PURE__*/function () {
       return this._value;
     },
     set: function set(value) {
+      if (value instanceof Function) {
+        value = value();
+      }
+
       this._value = value;
 
       this._updater(value);

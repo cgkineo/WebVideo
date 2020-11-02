@@ -32,11 +32,7 @@ export default class VideoParam {
         if (!isExpired) continue;
         switch (scheduledChanged.type) {
           case 'SetValue':
-            let value = scheduledChanged.value;
-            if (scheduledChanged.value instanceof Function) {
-              value = scheduledChanged.value();
-            }
-            this.value = value;
+            this.value = scheduledChanged.value;;
             // mark this scheduled change as actioned
             scheduledChanged.isComplete = true;
             console.log('modify VideoParam');
@@ -61,6 +57,9 @@ export default class VideoParam {
   }
 
   set value(value) {
+    if (value instanceof Function) {
+      value = value();
+    }
     this._value = value;
     this._updater(value);
   }
