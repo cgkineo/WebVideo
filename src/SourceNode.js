@@ -22,7 +22,11 @@ export default class SourceNode extends VideoScheduledSourceNode {
       if (this.options.currentTime === value) return;
       this.options.currentTime = value;
       console.log('move media time to', value);
-      this.mediaElement.currentTime = value;
+      try {
+        this.mediaElement.currentTime = value;
+      } catch (err) {
+        // tag not in the correct state
+      }
       this.changed();
     });
   }

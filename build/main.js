@@ -36,8 +36,8 @@
   const color2 = new WebVideo.ColorNode(context1);
   const fader1 = new WebVideo.FadeNode(context1, { amount: 0 });
 
-  $(document).ready(() => {
-    $('#btn').on('click', () => {
+  $(document).ready(function () {
+    $('#btn').on('click', function() {
 
       context1.resume();
 
@@ -52,21 +52,21 @@
 
   // This section highlights the issues with non-realtime video switching
       // Jump to exactly the same place in the second video
-      video2.currentTime.setValueAtTime(() => video1.mediaElement.currentTime, 5000);
       video1.started.setValueAtTime(false, 5000);
       video2.started.setValueAtTime(true, 5000);
+      video2.currentTime.setValueAtTime(function() { return video1.mediaElement.currentTime; }, 5000);
       fader1.amount.setValueAtTime(1, 5000);
 
       // Jump to exactly the same place in the first video
-      video1.currentTime.setValueAtTime(() => video2.mediaElement.currentTime, 10000);
       video2.started.setValueAtTime(false, 10000);
       video1.started.setValueAtTime(true, 10000);
+      video1.currentTime.setValueAtTime(function () { return video2.mediaElement.currentTime; }, 10000);
       fader1.amount.setValueAtTime(0, 10000);
 
       // Jump to exactly the same place in the second video
-      video2.currentTime.setValueAtTime(() => video1.mediaElement.currentTime, 15000);
       video1.started.setValueAtTime(false, 15000);
       video2.started.setValueAtTime(true, 15000);
+      video2.currentTime.setValueAtTime(function () { return video1.mediaElement.currentTime; }, 15000);
       fader1.amount.setValueAtTime(1, 15000);
 
   // This section is for jumping inside a video

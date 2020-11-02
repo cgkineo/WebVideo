@@ -11258,7 +11258,11 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
       if (_this.options.currentTime === value) return;
       _this.options.currentTime = value;
       console.log('move media time to', value);
-      _this.mediaElement.currentTime = value;
+
+      try {
+        _this.mediaElement.currentTime = value;
+      } catch (err) {// tag not in the correct state
+      }
 
       _this.changed();
     });
