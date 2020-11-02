@@ -11285,7 +11285,7 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
                 return _context.abrupt("return", this.doStart());
 
               case 3:
-                this._currentTime.setValueAtTime(true, when);
+                this._started.setValueAtTime(true, when);
 
               case 4:
               case "end":
@@ -11310,7 +11310,7 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
         return this.doStop();
       }
 
-      this._currentTime.setValueAtTime(false, when);
+      this._started.setValueAtTime(false, when);
     }
   }, {
     key: "doStart",

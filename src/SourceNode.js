@@ -56,14 +56,14 @@ export default class SourceNode extends VideoScheduledSourceNode {
     if (when === 0) {
       return this.doStart();
     }
-    this._currentTime.setValueAtTime(true, when);
+    this._started.setValueAtTime(true, when);
   }
 
   stop(when = 0) {
     if (when === 0) {
       return this.doStop();
     }
-    this._currentTime.setValueAtTime(false, when);
+    this._started.setValueAtTime(false, when);
   }
 
   async doStart() {
