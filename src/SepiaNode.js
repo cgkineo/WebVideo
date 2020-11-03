@@ -26,17 +26,29 @@ export default class SepiaNode extends VideoNode {
   }
 
   render() {
+    if (!this.hasModifications) return;
     const source = this.sources[0];
     if (!source) return;
     if (source.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
-    this.texture.loadContentsOf(source.mediaElement);
+    this.texture.loadContentsOf(source.output);
     this.shader.run(this.options);
   }
 
   get amount() {
     return this._amount;
+  }
+
+  get hasModifications() {
+    return Boolean(this.options.amount);
+  }
+
+  get output() {
+    if (!this.hasModifications && this.sources[0]) {
+      return this.sources[0].output;
+    }
+    return this._mediaElement;
   }
 
 }

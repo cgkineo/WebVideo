@@ -24,6 +24,7 @@ export default class FadeNode extends AudioCrossfadeNode {
   }
 
   render() {
+    if (!this.hasModifications) return;
     const source1 = this.sources[0];
     const source2 = this.sources[1];
     if (!source1 || !source2) return;
@@ -31,10 +32,10 @@ export default class FadeNode extends AudioCrossfadeNode {
       this.shader.resize();
     }
     if (this.options.amount !== 1) {
-      this.firstTexture.loadContentsOf(source1.mediaElement);
+      this.firstTexture.loadContentsOf(source1.output);
     }
     if (this.options.amount !== 0) {
-      this.secondTexture.loadContentsOf(source2.mediaElement);
+      this.secondTexture.loadContentsOf(source2.output);
     }
     this.shader.run(this.options);
   }

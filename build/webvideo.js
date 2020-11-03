@@ -10480,14 +10480,15 @@ var AudioCrossfadeNode = /*#__PURE__*/function (_VideoNode) {
     key: "update",
 
     /**
-    * Rerender all changed sources origins to destinations
-    */
+     * Rerender changed sources origins to destinations
+     */
     value: function update() {
       var hasChanged = false;
 
-      for (var i = 0, l = this.sources.length; i < l; i++) {
-        var source = this.sources[i]; // TODO: Ignore inactive sources
-
+      for (var i = 0, l = 2; i < l; i++) {
+        var source = this.sources[i];
+        if (this.options.amount === 0 && i === 1) continue;
+        if (this.options.amount === 1 && i === 0) continue;
         if (source.lastChanged < this._lastRendered) continue;
         source.update();
         hasChanged = true;
@@ -10501,6 +10502,24 @@ var AudioCrossfadeNode = /*#__PURE__*/function (_VideoNode) {
     key: "amount",
     get: function get() {
       return this._amount;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return this.options.amount !== 0 && this.options.amount !== 1;
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (this.options.amount === 0 && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      if (this.options.amount === 1 && this.sources[1]) {
+        return this.sources[1].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -10612,6 +10631,7 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
   _createClass(ColorNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source = this.sources[0];
       if (!source) return;
 
@@ -10619,7 +10639,7 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(source.mediaElement);
+      this.texture.loadContentsOf(source.output);
       this.shader.run(this.options);
     }
     /** @type {VideoParam} */
@@ -10649,6 +10669,20 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
     key: "saturation",
     get: function get() {
       return this._saturation;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return Boolean(this.options.brightness || this.options.hue || this.options.contrast || this.options.saturation);
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (!this.hasModifications && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -10761,7 +10795,7 @@ var DestinationNode = /*#__PURE__*/function (_VideoNode) {
       /** @type {Frame} */
 
       source.applyDimensions(this.mediaElement);
-      this.canvas2DContext.drawImage(source.mediaElement, 0, 0, source.width, source.height);
+      this.canvas2DContext.drawImage(source.output, 0, 0, source.width, source.height);
     }
   }, {
     key: "mediaElement",
@@ -10863,6 +10897,7 @@ var DisplacementNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
   _createClass(DisplacementNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
@@ -10872,11 +10907,11 @@ var DisplacementNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
       }
 
       if (this.options.amount !== 1) {
-        this.firstTexture.loadContentsOf(source1.mediaElement);
+        this.firstTexture.loadContentsOf(source1.output);
       }
 
       if (this.options.amount !== 0) {
-        this.secondTexture.loadContentsOf(source2.mediaElement);
+        this.secondTexture.loadContentsOf(source2.output);
       }
 
       this.urlResolver.href = this.options.displacement;
@@ -10973,6 +11008,7 @@ var FadeNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
   _createClass(FadeNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
@@ -10982,11 +11018,11 @@ var FadeNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
       }
 
       if (this.options.amount !== 1) {
-        this.firstTexture.loadContentsOf(source1.mediaElement);
+        this.firstTexture.loadContentsOf(source1.output);
       }
 
       if (this.options.amount !== 0) {
-        this.secondTexture.loadContentsOf(source2.mediaElement);
+        this.secondTexture.loadContentsOf(source2.output);
       }
 
       this.shader.run(this.options);
@@ -11162,6 +11198,7 @@ var SepiaNode = /*#__PURE__*/function (_VideoNode) {
   _createClass(SepiaNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source = this.sources[0];
       if (!source) return;
 
@@ -11169,13 +11206,27 @@ var SepiaNode = /*#__PURE__*/function (_VideoNode) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(source.mediaElement);
+      this.texture.loadContentsOf(source.output);
       this.shader.run(this.options);
     }
   }, {
     key: "amount",
     get: function get() {
       return this._amount;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return Boolean(this.options.amount);
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (!this.hasModifications && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -11930,7 +11981,7 @@ var Node = /*#__PURE__*/function (_EventTarget) {
       this._mediaElement.height = value;
     },
     get: function get() {
-      return this._mediaElement.height || this._mediaElement.videoHeight || this._mediaElement.originalHeight || this._mediaElement.clientHeight;
+      return this.output.height || this.output.videoHeight || this.output.originalHeight || this.output.clientHeight;
     }
   }, {
     key: "width",
@@ -11942,7 +11993,7 @@ var Node = /*#__PURE__*/function (_EventTarget) {
       this._mediaElement.width = value;
     },
     get: function get() {
-      return this._mediaElement.width || this._mediaElement.videoWidth || this._mediaElement.originalWidth || this._mediaElement.clientWidth;
+      return this.output.width || this.output.videoWidth || this.output.originalWidth || this.output.clientWidth;
     }
   }, {
     key: "mediaElement",
@@ -11999,6 +12050,16 @@ var Node = /*#__PURE__*/function (_EventTarget) {
     },
     set: function set(value) {
       this._audioNode = value;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return false;
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      return this._mediaElement;
     }
   }], [{
     key: "createEvent",

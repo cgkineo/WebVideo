@@ -47,10 +47,10 @@ export default class Node extends EventTarget {
   }
 
   get height() {
-    return this._mediaElement.height ||
-      this._mediaElement.videoHeight ||
-      this._mediaElement.originalHeight ||
-      this._mediaElement.clientHeight;
+    return this.output.height ||
+      this.output.videoHeight ||
+      this.output.originalHeight ||
+      this.output.clientHeight;
   }
 
   set width(value) {
@@ -61,10 +61,10 @@ export default class Node extends EventTarget {
   }
 
   get width() {
-    return this._mediaElement.width ||
-      this._mediaElement.videoWidth ||
-      this._mediaElement.originalWidth ||
-      this._mediaElement.clientWidth;
+    return this.output.width ||
+      this.output.videoWidth ||
+      this.output.originalWidth ||
+      this.output.clientWidth;
   }
 
   set mediaElement(value) {
@@ -287,6 +287,14 @@ export default class Node extends EventTarget {
       });
     }
     return from.dispatchEvent(dispatchEvent);
+  }
+
+  get hasModifications() {
+    return false;
+  }
+
+  get output() {
+    return this._mediaElement;
   }
 
 }
