@@ -35,11 +35,15 @@ export default class DisplacementNode extends AudioCrossfadeNode {
     if (source1.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
-    // TODO: Ignore inactive sources
-    this.firstTexture.loadContentsOf(source1.mediaElement); // If options.amount === 1 then don't do this
-    this.secondTexture.loadContentsOf(source2.mediaElement); // If options.amount === 0 then don't do this
+    if (this.options.amount !== 1) {
+      this.firstTexture.loadContentsOf(source1.mediaElement);
+    }
+    if (this.options.amount !== 0) {
+      this.secondTexture.loadContentsOf(source2.mediaElement);
+    }
     this.urlResolver.href = this.options.displacement;
-    if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
+    const hasDisplacementChanged = (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href);
+    if (hasDisplacementChanged) {
       this.displacementImg.src = this.options.displacement;
       this.displacementTexture.loadContentsOf(this.displacementImg);
       this._displacementSrc = this.displacementImg.src;

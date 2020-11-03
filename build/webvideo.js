@@ -10869,16 +10869,20 @@ var DisplacementNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
 
       if (source1.applyDimensions(this.webgl)) {
         this.shader.resize();
-      } // TODO: Ignore inactive sources
+      }
 
+      if (this.options.amount !== 1) {
+        this.firstTexture.loadContentsOf(source1.mediaElement);
+      }
 
-      this.firstTexture.loadContentsOf(source1.mediaElement); // If options.amount === 1 then don't do this
-
-      this.secondTexture.loadContentsOf(source2.mediaElement); // If options.amount === 0 then don't do this
+      if (this.options.amount !== 0) {
+        this.secondTexture.loadContentsOf(source2.mediaElement);
+      }
 
       this.urlResolver.href = this.options.displacement;
+      var hasDisplacementChanged = this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href;
 
-      if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
+      if (hasDisplacementChanged) {
         this.displacementImg.src = this.options.displacement;
         this.displacementTexture.loadContentsOf(this.displacementImg);
         this._displacementSrc = this.displacementImg.src;
@@ -10975,11 +10979,16 @@ var FadeNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
 
       if (source1.applyDimensions(this.webgl)) {
         this.shader.resize();
-      } // TODO: Ignore inactive sources
+      }
 
+      if (this.options.amount !== 1) {
+        this.firstTexture.loadContentsOf(source1.mediaElement);
+      }
 
-      this.firstTexture.loadContentsOf(source1.mediaElement);
-      this.secondTexture.loadContentsOf(source2.mediaElement);
+      if (this.options.amount !== 0) {
+        this.secondTexture.loadContentsOf(source2.mediaElement);
+      }
+
       this.shader.run(this.options);
     }
   }]);
