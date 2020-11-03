@@ -56,14 +56,15 @@ export default class AudioCrossfadeNode extends VideoNode {
     return this._amount;
   }
 
-    /**
-   * Rerender all changed sources origins to destinations
+  /**
+   * Rerender changed sources origins to destinations
    */
   update() {
     let hasChanged = false;
-    for (let i = 0, l = this.sources.length; i < l; i++) {
+    for (let i = 0, l = 2; i < l; i++) {
       const source = this.sources[i];
-      // TODO: Ignore inactive sources
+      if (this.options.amount === 0 && i === 1) continue;
+      if (this.options.amount === 1 && i === 0) continue;
       if (source.lastChanged < this._lastRendered) continue;
       source.update();
       hasChanged = true;
@@ -71,6 +72,20 @@ export default class AudioCrossfadeNode extends VideoNode {
     if (!hasChanged) return;
     this._lastRendered = Date.now();
     this.render();
+  }
+
+  get hasModifications() {
+    return (this.options.amount !== 0 && this.options.amount !== 1);
+  }
+
+  get output() {
+    if (this.options.amount === 0 && this.sources[0]) {
+      return this.sources[0].output;
+    }
+    if (this.options.amount === 1 && this.sources[1]) {
+      return this.sources[1].output;
+    }
+    return this._mediaElement;
   }
 
 }

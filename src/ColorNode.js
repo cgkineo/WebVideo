@@ -46,12 +46,13 @@ export default class ColorNode extends VideoNode {
   }
 
   render() {
+    if (!this.hasModifications) return;
     const source = this.sources[0];
     if (!source) return;
     if (source.applyDimensions(this.webgl)) {
       this.shader.resize();
     }
-    this.texture.loadContentsOf(source.mediaElement);
+    this.texture.loadContentsOf(source.output);
     this.shader.run(this.options);
   }
 
@@ -73,6 +74,17 @@ export default class ColorNode extends VideoNode {
   /** @type {VideoParam} */
   get saturation() {
     return this._saturation;
+  }
+
+  get hasModifications() {
+    return Boolean(this.options.brightness || this.options.hue || this.options.contrast || this.options.saturation);
+  }
+
+  get output() {
+    if (!this.hasModifications && this.sources[0]) {
+      return this.sources[0].output;
+    }
+    return this._mediaElement;
   }
 
 }

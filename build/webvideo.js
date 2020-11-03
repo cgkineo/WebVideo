@@ -10477,9 +10477,49 @@ var AudioCrossfadeNode = /*#__PURE__*/function (_VideoNode) {
     /** @type {VideoParam} */
 
   }, {
+    key: "update",
+
+    /**
+     * Rerender changed sources origins to destinations
+     */
+    value: function update() {
+      var hasChanged = false;
+
+      for (var i = 0, l = 2; i < l; i++) {
+        var source = this.sources[i];
+        if (this.options.amount === 0 && i === 1) continue;
+        if (this.options.amount === 1 && i === 0) continue;
+        if (source.lastChanged < this._lastRendered) continue;
+        source.update();
+        hasChanged = true;
+      }
+
+      if (!hasChanged) return;
+      this._lastRendered = Date.now();
+      this.render();
+    }
+  }, {
     key: "amount",
     get: function get() {
       return this._amount;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return this.options.amount !== 0 && this.options.amount !== 1;
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (this.options.amount === 0 && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      if (this.options.amount === 1 && this.sources[1]) {
+        return this.sources[1].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -10591,6 +10631,7 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
   _createClass(ColorNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source = this.sources[0];
       if (!source) return;
 
@@ -10598,7 +10639,7 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(source.mediaElement);
+      this.texture.loadContentsOf(source.output);
       this.shader.run(this.options);
     }
     /** @type {VideoParam} */
@@ -10628,6 +10669,20 @@ var ColorNode = /*#__PURE__*/function (_VideoNode) {
     key: "saturation",
     get: function get() {
       return this._saturation;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return Boolean(this.options.brightness || this.options.hue || this.options.contrast || this.options.saturation);
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (!this.hasModifications && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -10740,7 +10795,7 @@ var DestinationNode = /*#__PURE__*/function (_VideoNode) {
       /** @type {Frame} */
 
       source.applyDimensions(this.mediaElement);
-      this.canvas2DContext.drawImage(source.mediaElement, 0, 0, source.width, source.height);
+      this.canvas2DContext.drawImage(source.output, 0, 0, source.width, source.height);
     }
   }, {
     key: "mediaElement",
@@ -10842,6 +10897,7 @@ var DisplacementNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
   _createClass(DisplacementNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
@@ -10850,11 +10906,18 @@ var DisplacementNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
         this.shader.resize();
       }
 
-      this.firstTexture.loadContentsOf(source1.mediaElement);
-      this.secondTexture.loadContentsOf(source2.mediaElement);
-      this.urlResolver.href = this.options.displacement;
+      if (this.options.amount !== 1) {
+        this.firstTexture.loadContentsOf(source1.output);
+      }
 
-      if (this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href) {
+      if (this.options.amount !== 0) {
+        this.secondTexture.loadContentsOf(source2.output);
+      }
+
+      this.urlResolver.href = this.options.displacement;
+      var hasDisplacementChanged = this._displacementSrc !== this.displacementImg.src || this._displacementSrc !== this.urlResolver.href;
+
+      if (hasDisplacementChanged) {
         this.displacementImg.src = this.options.displacement;
         this.displacementTexture.loadContentsOf(this.displacementImg);
         this._displacementSrc = this.displacementImg.src;
@@ -10945,6 +11008,7 @@ var FadeNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
   _createClass(FadeNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source1 = this.sources[0];
       var source2 = this.sources[1];
       if (!source1 || !source2) return;
@@ -10953,8 +11017,14 @@ var FadeNode = /*#__PURE__*/function (_AudioCrossfadeNode) {
         this.shader.resize();
       }
 
-      this.firstTexture.loadContentsOf(source1.mediaElement);
-      this.secondTexture.loadContentsOf(source2.mediaElement);
+      if (this.options.amount !== 1) {
+        this.firstTexture.loadContentsOf(source1.output);
+      }
+
+      if (this.options.amount !== 0) {
+        this.secondTexture.loadContentsOf(source2.output);
+      }
+
       this.shader.run(this.options);
     }
   }]);
@@ -11128,6 +11198,7 @@ var SepiaNode = /*#__PURE__*/function (_VideoNode) {
   _createClass(SepiaNode, [{
     key: "render",
     value: function render() {
+      if (!this.hasModifications) return;
       var source = this.sources[0];
       if (!source) return;
 
@@ -11135,13 +11206,27 @@ var SepiaNode = /*#__PURE__*/function (_VideoNode) {
         this.shader.resize();
       }
 
-      this.texture.loadContentsOf(source.mediaElement);
+      this.texture.loadContentsOf(source.output);
       this.shader.run(this.options);
     }
   }, {
     key: "amount",
     get: function get() {
       return this._amount;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return Boolean(this.options.amount);
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      if (!this.hasModifications && this.sources[0]) {
+        return this.sources[0].output;
+      }
+
+      return this._mediaElement;
     }
   }]);
 
@@ -11164,7 +11249,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return SourceNode; });
 /* harmony import */ var _VideoScheduledSourceNode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoScheduledSourceNode */ "./src/VideoScheduledSourceNode.js");
 /* harmony import */ var _RAFLoop__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./RAFLoop */ "./src/RAFLoop.js");
+/* harmony import */ var _VideoParam__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoParam */ "./src/VideoParam.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -11193,6 +11283,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
+
 var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
   _inherits(SourceNode, _VideoScheduledSource);
 
@@ -11212,9 +11303,9 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
     _this.changed = _this.changed.bind(_assertThisInitialized(_this)); // Always push inputs the front to cascade correctly on each frame
 
     _this.changed.order = -Infinity;
-    _this.isVideo = _this.mediaElement instanceof HTMLVideoElement;
+    _this.isPlayable = _this.mediaElement instanceof HTMLVideoElement || _this.mediaElement instanceof HTMLAudioElement;
 
-    if (_this.isVideo) {
+    if (_this.isPlayable) {
       _this.mediaElement.addEventListener('play', _this.changed);
 
       _this.mediaElement.addEventListener('timeupdate', _this.changed);
@@ -11222,19 +11313,118 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
       _this._lastSeconds = 0;
     }
 
+    _this._currentTime = new _VideoParam__WEBPACK_IMPORTED_MODULE_2__["default"](context, 0, Number.MAX_SAFE_INTEGER, 0, function (value) {
+      if (!_this.isPlayable) return;
+      if (_this.options.currentTime === value) return;
+      _this.options.currentTime = value;
+      console.log('move media time to', value);
+
+      try {
+        _this.mediaElement.currentTime = value;
+      } catch (err) {// tag not in the correct state
+      }
+
+      _this.changed();
+    });
     return _this;
   }
 
   _createClass(SourceNode, [{
-    key: "changed",
+    key: "start",
+    value: function () {
+      var _start = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        var when,
+            _args = arguments;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                when = _args.length > 0 && _args[0] !== undefined ? _args[0] : 0;
 
+                if (!(when === 0)) {
+                  _context.next = 3;
+                  break;
+                }
+
+                return _context.abrupt("return", this.doStart());
+
+              case 3:
+                this._started.setValueAtTime(true, when);
+
+              case 4:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function start() {
+        return _start.apply(this, arguments);
+      }
+
+      return start;
+    }()
+  }, {
+    key: "stop",
+    value: function stop() {
+      var when = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+      if (when === 0) {
+        return this.doStop();
+      }
+
+      this._started.setValueAtTime(false, when);
+    }
+  }, {
+    key: "doStart",
+    value: function () {
+      var _doStart = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (this.isPlayable) {
+                  _context2.next = 2;
+                  break;
+                }
+
+                return _context2.abrupt("return");
+
+              case 2:
+                _context2.next = 4;
+                return this.mediaElement.play();
+
+              case 4:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function doStart() {
+        return _doStart.apply(this, arguments);
+      }
+
+      return doStart;
+    }()
+  }, {
+    key: "doStop",
+    value: function doStop() {
+      if (!this.isPlayable) return;
+      this.mediaElement.pause();
+    }
     /**
      * Trigger changed repeatedly for videos, throttle to the framerate and inside an animation frame
      */
+
+  }, {
+    key: "changed",
     value: function changed() {
       _get(_getPrototypeOf(SourceNode.prototype), "changed", this).call(this);
 
-      if (!this.isVideo || this.mediaElement.paused) return;
+      if (!this.isPlayable || this.mediaElement.paused) return;
       _RAFLoop__WEBPACK_IMPORTED_MODULE_1__["default"].add(this.changed);
     }
   }, {
@@ -11253,6 +11443,13 @@ var SourceNode = /*#__PURE__*/function (_VideoScheduledSource) {
     ,
     get: function get() {
       return this._mediaElement;
+    }
+    /** @type {VideoParam} */
+
+  }, {
+    key: "currentTime",
+    get: function get() {
+      return this._currentTime;
     }
   }]);
 
@@ -11466,7 +11663,7 @@ var VideoContext = /*#__PURE__*/function (_EventTarget) {
 
 
       var now = Date.now();
-      this._elapsedTime = this._lastResumeTime - now;
+      this._elapsedTime = now - this._lastResumeTime;
       return this._currentTime + this._elapsedTime;
     }
   }, {
@@ -11784,7 +11981,7 @@ var Node = /*#__PURE__*/function (_EventTarget) {
       this._mediaElement.height = value;
     },
     get: function get() {
-      return this._mediaElement.height || this._mediaElement.videoHeight || this._mediaElement.originalHeight || this._mediaElement.clientHeight;
+      return this.output.height || this.output.videoHeight || this.output.originalHeight || this.output.clientHeight;
     }
   }, {
     key: "width",
@@ -11796,7 +11993,7 @@ var Node = /*#__PURE__*/function (_EventTarget) {
       this._mediaElement.width = value;
     },
     get: function get() {
-      return this._mediaElement.width || this._mediaElement.videoWidth || this._mediaElement.originalWidth || this._mediaElement.clientWidth;
+      return this.output.width || this.output.videoWidth || this.output.originalWidth || this.output.clientWidth;
     }
   }, {
     key: "mediaElement",
@@ -11853,6 +12050,16 @@ var Node = /*#__PURE__*/function (_EventTarget) {
     },
     set: function set(value) {
       this._audioNode = value;
+    }
+  }, {
+    key: "hasModifications",
+    get: function get() {
+      return false;
+    }
+  }, {
+    key: "output",
+    get: function get() {
+      return this._mediaElement;
     }
   }], [{
     key: "createEvent",
@@ -11914,6 +12121,8 @@ var Node = /*#__PURE__*/function (_EventTarget) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return VideoParam; });
 /* harmony import */ var _RAFLoop__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./RAFLoop */ "./src/RAFLoop.js");
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -11931,6 +12140,7 @@ var VideoParam = /*#__PURE__*/function () {
     /** @type {VideoContext} */
 
     this._context = context;
+    this._type = _typeof(minValue);
     this._minValue = minValue;
     this._maxValue = maxValue;
     this._updater = updater;
@@ -11946,9 +12156,31 @@ var VideoParam = /*#__PURE__*/function () {
       // TODO: see https://www.w3.org/TR/webaudio/#AudioParam
       //  Based on this.context.currentTime
       // Apply the values according to the outstanding scheduled events
+      if (!this._scheduledChanges.length) return;
+
       for (var i = 0, l = this._scheduledChanges.length; i < l; i++) {
-        var scheduledChanged = [i];
+        var scheduledChanged = this._scheduledChanges[i];
+
+        if (scheduledChanged.hasOwnProperty('startTime')) {
+          var isExpired = this.context.currentTime >= scheduledChanged.startTime;
+          if (!isExpired) continue;
+
+          switch (scheduledChanged.type) {
+            case 'SetValue':
+              this.value = scheduledChanged.value;
+              ; // mark this scheduled change as actioned
+
+              scheduledChanged.isComplete = true;
+              console.log('modify VideoParam');
+              break;
+          }
+        }
       }
+
+      this._scheduledChanges = this._scheduledChanges.filter(function (scheduledChange) {
+        return !scheduledChange.isComplete;
+      });
+      _RAFLoop__WEBPACK_IMPORTED_MODULE_0__["default"].add(this.changed);
     }
   }, {
     key: "setValueAtTime",
@@ -11970,7 +12202,9 @@ var VideoParam = /*#__PURE__*/function () {
         type: 'LinearRampToValue',
         endTime: endTime,
         value: value
-      });
+      }); // TODO: look for any preceding event, if found schedule the linearRamp to begin at the endTime of the
+      // previous event (either a setValueAtTime or linearRampToValueAtTime)
+
 
       _RAFLoop__WEBPACK_IMPORTED_MODULE_0__["default"].add(this.changed);
     }
@@ -12053,6 +12287,10 @@ var VideoParam = /*#__PURE__*/function () {
       return this._value;
     },
     set: function set(value) {
+      if (value instanceof Function) {
+        value = value();
+      }
+
       this._value = value;
 
       this._updater(value);
@@ -12077,7 +12315,7 @@ var VideoParam = /*#__PURE__*/function () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return VideoScheduledSourceNode; });
 /* harmony import */ var _VideoNode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoNode */ "./src/VideoNode.js");
-/* harmony import */ var _RAFLoop__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./RAFLoop */ "./src/RAFLoop.js");
+/* harmony import */ var _VideoParam__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoParam */ "./src/VideoParam.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -12108,19 +12346,65 @@ var VideoScheduledSourceNode = /*#__PURE__*/function (_VideoNode) {
 
   var _super = _createSuper(VideoScheduledSourceNode);
 
-  function VideoScheduledSourceNode() {
+  function VideoScheduledSourceNode(context) {
+    var _this;
+
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, VideoScheduledSourceNode);
 
-    return _super.apply(this, arguments);
+    _this = _super.call(this, context, options);
+    _this._started = new _VideoParam__WEBPACK_IMPORTED_MODULE_1__["default"](context, false, true, false, function (value) {
+      if (_this.options.started === value) return;
+      _this.options.started = value;
+      value === true ? _this.doStart() : _this.doStop();
+
+      _this.changed();
+    });
+    return _this;
   }
+  /**
+   * Boolean for scheduling start/stop
+   * @type {VideoParam}
+   */
+
 
   _createClass(VideoScheduledSourceNode, [{
+    key: "doStart",
+
+    /**
+     * To be implemented by subclasses
+     */
+    value: function doStart() {}
+    /**
+     * To be implemented by subclasses
+     */
+
+  }, {
+    key: "doStop",
+    value: function doStop() {}
+    /**
+     * To be implemented by subclasses
+     */
+
+  }, {
     key: "start",
-    value: function start(when) {// TODO: Based on this.context.currentTime
+    value: function start() {
+      var when = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     }
+    /**
+     * To be implemented by subclasses
+     */
+
   }, {
     key: "stop",
-    value: function stop(when) {// TODO: Based on this.context.currentTime
+    value: function stop() {
+      var when = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+    }
+  }, {
+    key: "started",
+    get: function get() {
+      return this._started;
     }
   }]);
 
@@ -12174,7 +12458,6 @@ var WebGL = /*#__PURE__*/function () {
     if (!this.canvasWebGLContext) throw 'No WebGL support';
     this.canvasWebGLContext.blendFunc(this.canvasWebGLContext.SRC_ALPHA, this.canvasWebGLContext.ONE_MINUS_SRC_ALPHA);
     this.canvasWebGLContext.enable(this.canvasWebGLContext.BLEND);
-    this.framebuffer = new _WebGLTexture__WEBPACK_IMPORTED_MODULE_0__["default"](this.canvasWebGLContext);
   }
 
   _createClass(WebGL, [{
@@ -12189,7 +12472,6 @@ var WebGL = /*#__PURE__*/function () {
     },
     set: function set(value) {
       this.canvas.width = value;
-      this.framebuffer.width = value;
       this.resize();
     }
   }, {
@@ -12199,7 +12481,6 @@ var WebGL = /*#__PURE__*/function () {
     },
     set: function set(value) {
       this.canvas.height = value;
-      this.framebuffer.height = value;
       this.resize();
     }
   }]);
@@ -12392,25 +12673,25 @@ var WebGLShader = /*#__PURE__*/function () {
       right = right !== undefined ? (right - this.viewport[0]) / this.viewport[2] : 1;
       bottom = bottom !== undefined ? (bottom - this.viewport[1]) / this.viewport[3] : 1;
 
-      if (this.canvasWebGLContext.vertexBuffer == null) {
+      if (!this.canvasWebGLContext.vertexBuffer) {
         this.canvasWebGLContext.vertexBuffer = this.canvasWebGLContext.createBuffer();
       }
 
       this.canvasWebGLContext.bindBuffer(this.canvasWebGLContext.ARRAY_BUFFER, this.canvasWebGLContext.vertexBuffer);
       this.canvasWebGLContext.bufferData(this.canvasWebGLContext.ARRAY_BUFFER, new Float32Array([left, top, left, bottom, right, top, right, bottom]), this.canvasWebGLContext.STATIC_DRAW);
 
-      if (this.canvasWebGLContext.texCoordBuffer == null) {
+      if (!this.canvasWebGLContext.texCoordBuffer) {
         this.canvasWebGLContext.texCoordBuffer = this.canvasWebGLContext.createBuffer();
         this.canvasWebGLContext.bindBuffer(this.canvasWebGLContext.ARRAY_BUFFER, this.canvasWebGLContext.texCoordBuffer);
         this.canvasWebGLContext.bufferData(this.canvasWebGLContext.ARRAY_BUFFER, new Float32Array([0, 0, 0, 1, 1, 0, 1, 1]), this.canvasWebGLContext.STATIC_DRAW);
       }
 
-      if (this.vertexAttribute == null) {
+      if (!this.vertexAttribute) {
         this.vertexAttribute = this.canvasWebGLContext.getAttribLocation(this.program, 'aVertexPosition');
         this.canvasWebGLContext.enableVertexAttribArray(this.vertexAttribute);
       }
 
-      if (this.texCoordAttribute == null) {
+      if (!this.texCoordAttribute) {
         this.texCoordAttribute = this.canvasWebGLContext.getAttribLocation(this.program, 'aTextureCoord');
         this.canvasWebGLContext.enableVertexAttribArray(this.texCoordAttribute);
       }

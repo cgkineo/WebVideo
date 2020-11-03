@@ -52,7 +52,7 @@ export default class DestinationNode extends VideoNode {
     const source = this.sources[0];
     /** @type {Frame} */
     source.applyDimensions(this.mediaElement);
-    this.canvas2DContext.drawImage(source.mediaElement, 0, 0, source.width, source.height);
+    this.canvas2DContext.drawImage(source.output, 0, 0, source.width, source.height);
   }
 
 }

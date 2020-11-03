@@ -7,6 +7,7 @@ export default class VideoParam {
     this.changed = this.changed.bind(this);
     /** @type {VideoContext} */
     this._context = context;
+    this._type = typeof minValue;
     this._minValue = minValue;
     this._maxValue = maxValue;
     this._updater = updater;
@@ -23,10 +24,24 @@ export default class VideoParam {
     // TODO: see https://www.w3.org/TR/webaudio/#AudioParam
     //  Based on this.context.currentTime
     // Apply the values according to the outstanding scheduled events
+    if (!this._scheduledChanges.length) return;
     for (let i = 0, l = this._scheduledChanges.length; i < l; i++) {
-      const scheduledChanged = [i];
-
+      const scheduledChanged = this._scheduledChanges[i];
+      if (scheduledChanged.hasOwnProperty('startTime')) {
+        const isExpired = (this.context.currentTime >= scheduledChanged.startTime);
+        if (!isExpired) continue;
+        switch (scheduledChanged.type) {
+          case 'SetValue':
+            this.value = scheduledChanged.value;;
+            // mark this scheduled change as actioned
+            scheduledChanged.isComplete = true;
+            console.log('modify VideoParam');
+            break;
+        }
+      }
     }
+    this._scheduledChanges = this._scheduledChanges.filter(scheduledChange => !scheduledChange.isComplete);
+    RAFLoop.add(this.changed);
   }
 
   get minValue() {
@@ -42,6 +57,9 @@ export default class VideoParam {
   }
 
   set value(value) {
+    if (value instanceof Function) {
+      value = value();
+    }
     this._value = value;
     this._updater(value);
   }
@@ -63,6 +81,8 @@ export default class VideoParam {
       endTime,
       value
     });
+    // TODO: look for any preceding event, if found schedule the linearRamp to begin at the endTime of the
+    // previous event (either a setValueAtTime or linearRampToValueAtTime)
     RAFLoop.add(this.changed);
   }
 

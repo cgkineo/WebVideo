@@ -77,7 +77,7 @@ export default class VideoContext extends EventTarget {
     }
     // Count elapsed time
     const now = Date.now();
-    this._elapsedTime = this._lastResumeTime - now;
+    this._elapsedTime = now - this._lastResumeTime;
     return this._currentTime + this._elapsedTime;
   }
 
