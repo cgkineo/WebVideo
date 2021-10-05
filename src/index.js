@@ -1,4 +1,3 @@
-import '@babel/polyfill'
 import VideoContext from './VideoContext'
 import SourceNode from './SourceNode'
 import DestinationNode from './DestinationNode'
