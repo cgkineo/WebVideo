@@ -1,8 +1,7 @@
-import WebGLShader from '../WebGLShader';
+import WebGLShader from '../WebGLShader'
 
 export default class SepiaShader extends WebGLShader {
-
-  get fragmentSource() {
+  get fragmentSource () {
     return `
 uniform sampler2D texture;
 uniform float amount;
@@ -19,13 +18,12 @@ void main() {
 
   gl_FragColor = color;
 }
-    `;
+    `
   }
 
-  parseUniforms(uniforms) {
+  parseUniforms (uniforms) {
     return {
-      amount: WebGLShader.clamp(0, uniforms.amount, 1),
-    };
+      amount: WebGLShader.clamp(0, uniforms.amount, 1)
+    }
   }
-
 }

@@ -1,8 +1,7 @@
-import WebGLShader from '../WebGLShader';
+import WebGLShader from '../WebGLShader'
 
 export default class ColorShader extends WebGLShader {
-
-  get fragmentSource() {
+  get fragmentSource () {
     return `
 uniform sampler2D texture;
 uniform float brightness;
@@ -39,17 +38,15 @@ void main() {
 
   gl_FragColor = color;
 }
-    `;
+    `
   }
 
-  parseUniforms(uniforms) {
+  parseUniforms (uniforms) {
     return {
       brightness: WebGLShader.clamp(-1, uniforms.brightness, 1),
       contrast: WebGLShader.clamp(-1, uniforms.contrast, 1),
       hue: WebGLShader.clamp(-1, uniforms.hue, 1),
-      saturation: WebGLShader.clamp(-1, uniforms.saturation, 1),
-    };
+      saturation: WebGLShader.clamp(-1, uniforms.saturation, 1)
+    }
   }
-
 }
-

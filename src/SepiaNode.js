@@ -1,54 +1,52 @@
-import VideoNode from './VideoNode';
-import VideoParam from './VideoParam';
-import WebGL from './WebGL';
-import WebGLTexture from './WebGLTexture';
-import SepiaShader from './shaders/Sepia';
+import VideoNode from './VideoNode'
+import VideoParam from './VideoParam'
+import WebGL from './WebGL'
+import WebGLTexture from './WebGLTexture'
+import SepiaShader from './shaders/Sepia'
 
 export default class SepiaNode extends VideoNode {
-
   /**
    * @param {Object} options
    * @param {number} options.amount
    */
-  constructor(context, options = {}) {
-    super(context, options);
-    this.webgl = new WebGL();
-    this.mediaElement = this.webgl.canvas;
-    this.texture = new WebGLTexture(this.webgl.canvasWebGLContext);
+  constructor (context, options = {}) {
+    super(context, options)
+    this.webgl = new WebGL()
+    this.mediaElement = this.webgl.canvas
+    this.texture = new WebGLTexture(this.webgl.canvasWebGLContext)
     this.shader = new SepiaShader(this.webgl.canvasWebGLContext, {
       texture: this.texture
-    });
+    })
     this._amount = new VideoParam(context, 0, 1, 0, value => {
-      if (this.options.amount === value) return;
-      this.options.amount = value;
-      this.changed();
-    });
+      if (this.options.amount === value) return
+      this.options.amount = value
+      this.changed()
+    })
   }
 
-  render() {
-    if (!this.hasModifications) return;
-    const source = this.sources[0];
-    if (!source) return;
+  render () {
+    if (!this.hasModifications) return
+    const source = this.sources[0]
+    if (!source) return
     if (source.applyDimensions(this.webgl)) {
-      this.shader.resize();
+      this.shader.resize()
     }
-    this.texture.loadContentsOf(source.output);
-    this.shader.run(this.options);
+    this.texture.loadContentsOf(source.output)
+    this.shader.run(this.options)
   }
 
-  get amount() {
-    return this._amount;
+  get amount () {
+    return this._amount
   }
 
-  get hasModifications() {
-    return Boolean(this.options.amount);
+  get hasModifications () {
+    return Boolean(this.options.amount)
   }
 
-  get output() {
+  get output () {
     if (!this.hasModifications && this.sources[0]) {
-      return this.sources[0].output;
+      return this.sources[0].output
     }
-    return this._mediaElement;
+    return this._mediaElement
   }
-
 }

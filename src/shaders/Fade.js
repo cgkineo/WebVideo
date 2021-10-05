@@ -1,8 +1,7 @@
-import WebGLShader from '../WebGLShader';
+import WebGLShader from '../WebGLShader'
 
 export default class FadeShader extends WebGLShader {
-
-  get fragmentSource() {
+  get fragmentSource () {
     return `
 varying vec2 vTextureCoord;
 uniform float amount;
@@ -22,13 +21,12 @@ void main( void ) {
 
   gl_FragColor = finalColor;
 }
-    `;
+    `
   }
 
-  parseUniforms(uniforms) {
+  parseUniforms (uniforms) {
     return {
       amount: WebGLShader.clamp(0, uniforms.amount, 1)
-    };
+    }
   }
-
 }

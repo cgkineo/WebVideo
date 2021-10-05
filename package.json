@@ -1,11 +1,10 @@
 {
-  "name": "stream2",
-  "version": "0.1.0",
+  "name": "webvideo",
+  "version": "0.2.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "webpack-dev-server --mode development --host 127.0.0.1",
-    "build": "webpack --mode development",
+    "build": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -17,7 +16,13 @@
     "babel-loader": "^8.0.6",
     "webpack": "^4.35.0",
     "webpack-cli": "^3.3.4",
-    "webpack-dev-server": "^3.7.2"
+    "webpack-dev-server": "^3.7.2",
+    "eslint": "^7.31.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-react": "^7.24.0"
   },
   "dependencies": {
     "@ungap/event-target": "^0.2.2",

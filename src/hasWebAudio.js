@@ -1,1 +1,1 @@
-export default Boolean(window.AudioContext || window.webkitAudioContext);
+export default Boolean(window.AudioContext || window.webkitAudioContext)

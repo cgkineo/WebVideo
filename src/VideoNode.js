@@ -1,73 +1,82 @@
-import hasWebAudio from './hasWebAudio';
-import isIE from './isIE';
-import EventTarget from '@ungap/event-target';
+import hasWebAudio from './hasWebAudio'
+import isIE from './isIE'
+import EventTarget from '@ungap/event-target'
+// import { Logger } from 'util/Debug'
 /** @typedef {import("./VideoContext").default} VideoContext */
 
 export default class Node extends EventTarget {
+  constructor (context, options = {}) {
+    super()
 
-  constructor(context, options = {}) {
-    super();
-    this.onSourceChanged = this.onSourceChanged.bind(this);
-    this.onOriginChanged = this.onOriginChanged.bind(this);
+    // TODO: Find another way of passing the logger into new nodes
+    // this.logger = Logger.get(this.constructor.name, '#d0d3d4', '#003b49')
+
+    this.onSourceChanged = this.onSourceChanged.bind(this)
+    this.onOriginChanged = this.onOriginChanged.bind(this)
     /** @type {VideoContext} */
-    this._context = context;
-    this._options = options;
-    this._lastRendered = 0;
+    this._context = context
+    this._options = options
+    this._lastRendered = 0
     /** @type {HTMLElement} */
-    this._mediaElement = null;
+    this._mediaElement = null
     /** @type {[Node]} */
-    this.destinations = [];
+    this.destinations = []
     /** @type {[Node]} */
-    this.sources = [];
-    this.context.addNode(this);
+    this.sources = []
+    this.context.addNode(this)
+  }
+
+  destroy () {
+    this.destinations.forEach(destination => this.disconnect(destination), this)
+    this.sources.forEach(source => source?.disconnect(this), this)
   }
 
   /** @type {VideoContext} */
-  get context() {
-    return this._context;
+  get context () {
+    return this._context
   }
 
-  get options() {
-    return this._options;
+  get options () {
+    return this._options
   }
 
-  set options(value) {
-    this._options = value;
+  set options (value) {
+    this._options = value
   }
 
-  get lastRendered() {
-    return this._lastRendered;
+  get lastRendered () {
+    return this._lastRendered
   }
 
-  set height(value) {
+  set height (value) {
     if (!(this._mediaElement instanceof HTMLCanvasElement) && !(this._mediaElement instanceof OffscreenCanvas)) {
-      throw new Error(`Cannot only set height on canvas mediaElements`);
+      throw new Error('Cannot only set height on canvas mediaElements')
     }
-    this._mediaElement.height = value;
+    this._mediaElement.height = value
   }
 
-  get height() {
+  get height () {
     return this.output.height ||
       this.output.videoHeight ||
       this.output.originalHeight ||
-      this.output.clientHeight;
+      this.output.clientHeight
   }
 
-  set width(value) {
+  set width (value) {
     if (!(this._mediaElement instanceof HTMLCanvasElement) && !(this._mediaElement instanceof OffscreenCanvas)) {
-      throw new Error(`Cannot only set width on canvas mediaElements`);
+      throw new Error('Cannot only set width on canvas mediaElements')
     }
-    this._mediaElement.width = value;
+    this._mediaElement.width = value
   }
 
-  get width() {
+  get width () {
     return this.output.width ||
       this.output.videoWidth ||
       this.output.originalWidth ||
-      this.output.clientWidth;
+      this.output.clientWidth
   }
 
-  set mediaElement(value) {
+  set mediaElement (value) {
     if (
       (window.OffscreenCanvas && !(value instanceof window.OffscreenCanvas)) &&
       !(value instanceof window.HTMLImageElement) &&
@@ -75,29 +84,29 @@ export default class Node extends EventTarget {
       !(value instanceof window.HTMLAudioElement) &&
       !(value instanceof window.HTMLCanvasElement)
     ) {
-      throw new Error(`Node.mediaElement must be a canvas, img, video or audio mediaElement`);
+      throw new Error('Node.mediaElement must be a canvas, img, video or audio mediaElement')
     }
-    this._mediaElement = value;
+    this._mediaElement = value
   }
 
-  get mediaElement() {
-    return this._mediaElement;
+  get mediaElement () {
+    return this._mediaElement
   }
 
-  applyDimensions(setOns) {
+  applyDimensions (setOns) {
     if (!(setOns instanceof Array)) {
-      setOns = [setOns];
+      setOns = [setOns]
     }
-    const width = this.width;
-    const height = this.height;
-    let isChanged = false;
-    setOns.forEach(function(setOn) {
-      if (setOn.width === width && setOn.height === height) return;
-      isChanged = true;
-      setOn.width = width;
-      setOn.height = height;
-    }.bind(this));
-    return isChanged;
+    const width = this.width
+    const height = this.height
+    let isChanged = false
+    setOns.forEach(function (setOn) {
+      if (setOn.width === width && setOn.height === height) return
+      isChanged = true
+      setOn.width = width
+      setOn.height = height
+    })
+    return isChanged
   }
 
   /**
@@ -105,10 +114,10 @@ export default class Node extends EventTarget {
    * @param {Node} destination
    * @param {number} inputIndex Input index for the destination stream
    */
-  connect(destination, inputIndex = 0) {
-    this.addDestination(destination);
-    destination.addSource(this, inputIndex);
-    return destination;
+  connect (destination, inputIndex = 0) {
+    this.addDestination(destination)
+    destination.addSource(this, inputIndex)
+    return destination
   }
 
   /**
@@ -116,27 +125,27 @@ export default class Node extends EventTarget {
    * @param {Node} destination
    * @param {number} inputIndex Input index for the destination stream
    */
-  disconnect(destination, inputIndex = 0) {
-    this.removeDestination(destination);
-    destination.removeSource(this, inputIndex);
-    return destination;
+  disconnect (destination, inputIndex = 0) {
+    this.removeDestination(destination)
+    destination.removeSource(this, inputIndex)
+    return destination
   }
 
   /**
    * Handle the connection of a destination stream
    * @param {Node} destination
    */
-  addDestination(destination) {
-    this.removeDestination(destination);
-    this.destinations.push(destination);
+  addDestination (destination) {
+    this.removeDestination(destination)
+    this.destinations.push(destination)
   }
 
   /**
    * Handle the removal of a destination stream
    * @param {Node} destination
    */
-  removeDestination(destination) {
-    this.destinations = this.destinations.filter(item => item === destination);
+  removeDestination (destination) {
+    this.destinations = this.destinations.filter(item => item === destination)
   }
 
   /**
@@ -144,16 +153,19 @@ export default class Node extends EventTarget {
    * @param {Node} source
    * @param {number} inputIndex Input index for this stream
    */
-  addSource(source, inputIndex = 0) {
-    if (!source) return;
-    this.removeSource(this.sources[inputIndex], inputIndex);
-    this.sources[inputIndex] = source;
-    source.addEventListener('changed', this.onSourceChanged);
-    source.addEventListener('added', this.onOriginChanged);
-    source.addEventListener('removed', this.onOriginChanged);
-    const event = Node.createEvent('added', { detail: { source, inputIndex } });
-    Node.propagateEvent(this, event);
-    this.onOriginChanged(event);
+  addSource (source, inputIndex = 0) {
+    if (!source) return
+
+    this.logger?.log(`addSource ${source._options._descriptor} to inputIndex ${inputIndex}`)
+
+    this.removeSource(this.sources[inputIndex], inputIndex)
+    this.sources[inputIndex] = source
+    source.addEventListener('changed', this.onSourceChanged)
+    source.addEventListener('added', this.onOriginChanged)
+    source.addEventListener('removed', this.onOriginChanged)
+    const event = Node.createEvent('added', { detail: { source, inputIndex } })
+    Node.propagateEvent(this, event)
+    this.onOriginChanged(event)
   }
 
   /**
@@ -161,94 +173,106 @@ export default class Node extends EventTarget {
    * @param {Node} stream
    * @param {number} inputIndex
    */
-  removeSource(source, inputIndex = 0) {
-    if (source && this.sources[inputIndex] !== source) return;
-    if (source) {
-      source.removeEventListener('changed', this.onSourceChanged);
-      source.removeEventListener('added', this.onOriginChanged);
-      source.removeEventListener('removed', this.onOriginChanged);
-    }
-    delete this.sources[inputIndex];
-    const event = Node.createEvent('removed', { detail: { source, inputIndex } });
-    Node.propagateEvent(this, event);
+  removeSource (source, inputIndex = 0) {
+    if (!source) return
+
+    if (this.sources[inputIndex] !== source) return
+
+    this.logger?.log(`removeSource ${source._options._descriptor} from inputIndex ${inputIndex}`)
+
+    source.removeEventListener('changed', this.onSourceChanged)
+    source.removeEventListener('added', this.onOriginChanged)
+    source.removeEventListener('removed', this.onOriginChanged)
+
+    // this.sources.splice(inputIndex, 1);
+    delete this.sources[inputIndex]
+    const event = Node.createEvent('removed', { detail: { source, inputIndex } })
+    Node.propagateEvent(this, event)
+    this.onOriginChanged(event)
   }
 
   /**
    * Executed when a source changed() is called
    * @param {Event} event
    */
-  onSourceChanged(event) {
-    this.changed(event);
+  onSourceChanged (event) {
+    this.changed(event)
   }
 
-  onOriginChanged(event) {
-    Node.propagateEvent(this, event);
+  onOriginChanged (event) {
+    Node.propagateEvent(this, event)
   }
 
-  get audioOrigins() {
-    const hasAudioNode = Boolean(this._audioNode);
-    if (hasAudioNode) return [this];
-    const isAudioOrigin = this.sources.length === 0 && (this._mediaElement instanceof HTMLMediaElement);
-    if (isAudioOrigin) return [this];
-    const origins = [];
+  get audioOrigins () {
+    const hasAudioNode = Boolean(this._audioNode)
+    if (hasAudioNode) return [this]
+    const isAudioOrigin = this.sources.length === 0 && (this._mediaElement instanceof HTMLMediaElement)
+    if (isAudioOrigin) return [this]
+    const origins = []
     for (let i = 0, l = this.sources.length; i < l; i++) {
-      const source = this.sources[i];
-      origins.push(...source.audioOrigins);
+      const source = this.sources[i]
+      if (source) {
+        origins.push(...source.audioOrigins)
+      }
     }
-    const uniques = [];
+    const uniques = []
     origins.forEach(origin => {
-      if (uniques.find(unique => origin === unique)) return;
-      uniques.push(origin);
-    });
-    return uniques;
+      if (uniques.find(unique => origin === unique)) return
+      uniques.push(origin)
+    })
+    return uniques
   }
 
   /**
    * Return an AudioNode or null, which represents this VideoNode
    * @type {AudioNode}
    */
-  get audioNode() {
-    if (!hasWebAudio) return null;
-    const isAudioOrigin = this.sources.length === 0 && (this._mediaElement instanceof HTMLMediaElement);
-    let hasAudioNode = Boolean(this._audioNode);
+  get audioNode () {
+    if (!hasWebAudio) return null
+    const isAudioOrigin = this.sources.length === 0 && (this._mediaElement instanceof HTMLMediaElement)
+    const hasAudioNode = Boolean(this._audioNode)
     if (isAudioOrigin && !hasAudioNode) {
-      this._audioNode = this.context.audioContext.createMediaElementSource(this._mediaElement);
+      this._audioNode = this.context.audioContext.createMediaElementSource(this._mediaElement)
     }
-    return (this._audioNode || null);
+    return (this._audioNode || null)
   }
 
-  set audioNode(value) {
-    this._audioNode = value;
+  set audioNode (value) {
+    this._audioNode = value
   }
 
   /**
    * Rerender all changed sources origins to destinations
    */
-  update() {
-    let hasChanged = false;
+  update () {
+    let hasChanged = false
     for (let i = 0, l = this.sources.length; i < l; i++) {
-      const source = this.sources[i];
-      if (source.lastChanged < this._lastRendered) continue;
-      source.update();
-      hasChanged = true;
+      const source = this.sources[i]
+      if (!source || source.lastChanged < this._lastRendered) continue
+      source.update()
+      hasChanged = true
     }
-    if (!hasChanged) return;
-    this._lastRendered = Date.now();
-    this.render();
+    if (!hasChanged) return
+    this._lastRendered = Date.now()
+    this.render()
   }
 
   /**
    * Interface function for rendering transformation
    */
-  render() {}
+  render () {}
 
   /**
    * Cascade a changed event from source forward to destinations
    */
-  changed(event = null) {
-    this.lastChanged = Date.now();
-    event = event || Node.createEvent('changed');
-    return Node.propagateEvent(this, event);
+  changed (event = null) {
+    this.lastChanged = Date.now()
+    event = event || Node.createEvent('changed')
+    return Node.propagateEvent(this, event)
+  }
+
+  toString () {
+    return this.options._descriptor
   }
 
   /**
@@ -256,16 +280,16 @@ export default class Node extends EventTarget {
    * @param {string} type
    * @param {properties} properties
    */
-  static createEvent(type, properties) {
-    let event;
+  static createEvent (type, properties) {
+    let event
     if (isIE) {
-      event = document.createEvent('Event');
-      event.initEvent(type, true, false);
-      event.detail = properties;
+      event = document.createEvent('Event')
+      event.initEvent(type, true, false)
+      event.detail = properties
     } else {
-      event = new CustomEvent(type, { detail: properties });
+      event = new CustomEvent(type, { detail: properties })
     }
-    return event;
+    return event
   }
 
   /**
@@ -273,28 +297,27 @@ export default class Node extends EventTarget {
    * @param {Node} from
    * @param {Event} event
    */
-  static propagateEvent(from, event) {
-    const isDispatched = Boolean(event.eventPhase);
-    const dispatchEvent = isDispatched ?
-      Node.createEvent(event.type, event) :
-      event;
+  static propagateEvent (from, event) {
+    const isDispatched = Boolean(event.eventPhase)
+    const dispatchEvent = isDispatched
+      ? Node.createEvent(event.type, event)
+      : event
     if (isDispatched) {
       Object.defineProperty(dispatchEvent, 'path', {
         value: (event.path || []).concat([from]),
         writable: true,
         enumerable: true,
         configurable: true
-      });
+      })
     }
-    return from.dispatchEvent(dispatchEvent);
+    return from.dispatchEvent(dispatchEvent)
   }
 
-  get hasModifications() {
-    return false;
+  get hasModifications () {
+    return false
   }
 
-  get output() {
-    return this._mediaElement;
+  get output () {
+    return this._mediaElement
   }
-
 }

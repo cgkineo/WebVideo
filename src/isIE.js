@@ -1,1 +1,1 @@
-export default (window.navigator.userAgent.indexOf('Trident/') !== -1);
+export default (window.navigator.userAgent.indexOf('Trident/') !== -1)
